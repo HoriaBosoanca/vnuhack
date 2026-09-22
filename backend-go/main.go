@@ -65,15 +65,33 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
+	handler := withCORS(mux)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
 	log.Printf("listening on :%s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// withCORS allows browser-based clients (like a React dev server on
+// localhost) to call this API from a different origin.
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func ensureSchema() error {
@@ -88,10 +106,9 @@ func ensureSchema() error {
 }
 
 // rootHandler dispatches based on method and path:
-//
-//	POST /        -> create
-//	GET  /        -> list all
-//	GET  /{id}    -> get one
+//   POST /        -> create
+//   GET  /        -> list all
+//   GET  /{id}    -> get one
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
