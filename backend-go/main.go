@@ -66,12 +66,8 @@ func main() {
 	mux.HandleFunc("/", rootHandler)
 
 	handler := withCORS(mux)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
+	
+	port := "8080"
 	log.Printf("listening on :%s", port)
 	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		log.Fatal(err)
