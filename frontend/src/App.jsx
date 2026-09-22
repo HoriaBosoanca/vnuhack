@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 // Base URL of your Go backend
-const API_BASE = 'localhost:8080'
+const API_BASE = 'https://vnuhack.onrender.com'
 
 function App() {
   const [postText, setPostText] = useState('')
