@@ -103,10 +103,8 @@ async def rezerva(b: RezervareNoua, request: Request, u=Depends(current_user)):
             qty = hours * len(days)
             line = f"{len(days)} {'zi' if len(days) == 1 else 'zile'} × {fmt_num(hours, 1)} h × {fmt_lei(price)}"
         total = round(qty * price, 2)
-        img = x["img_urls"][0] if x["img_urls"] else None
-        if not img:
-            p = await fetch_one(conn, "SELECT id FROM poze WHERE anunt_id = %s ORDER BY pos LIMIT 1", (x["id"],))
-            img = f"/api/poze/{p['id']}" if p else ""
+        p = await fetch_one(conn, "SELECT id FROM poze WHERE anunt_id = %s ORDER BY pos LIMIT 1", (x["id"],))
+        img = f"/api/poze/{p['id']}" if p else ""
         snapshot = {"listingTitle": x["title"], "address": f"{x['address']}, {x['location']}", "img": img,
                     "ownerName": x["owner_name"], "ownerPhone": x["owner_phone"], "unit": unit, "price": num(x["price"])}
         payment = {"txn": "TXN-" + format(int(_time.time() * 1000), "X"), "brand": b.payment.brand, "last4": b.payment.last4,
@@ -178,7 +176,7 @@ async def lasa_recenzie(b: RecenzieNoua, request: Request, u=Depends(current_use
             raise HTTPException(400, "Poți lăsa o recenzie după ce începe rezervarea.")
         if b.type == "listing" and not b.hostStars:
             raise HTTPException(422, "Alege de la 1 la 5 stele pentru gazdă.")
-        owner_key = f"u{r['owner_id']}" if r["owner_id"] else "seed:" + r["snapshot"]["ownerName"]
+        owner_key = f"u{r['owner_id']}" if r["owner_id"] else None
         row = await fetch_one(conn, """
             INSERT INTO recenzii (type, booking_id, listing_id, owner_key, guest_id, guest_name, author_id, author_name, stars, host_stars, comment)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (booking_id, type) DO NOTHING RETURNING *

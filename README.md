@@ -7,7 +7,7 @@ Backend (FastAPI + PostgreSQL), în `backend-py`:
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
-Pornește pe http://localhost:8000 (documentația API: http://localhost:8000/docs). La prima pornire creează tabelele și adaugă anunțurile demo.
+Pornește pe http://localhost:8000 (documentația API: http://localhost:8000/docs). La pornire creează tabelele, dacă nu există.
 
 Frontend (React), în `frontend`:
 ```

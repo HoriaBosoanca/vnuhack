@@ -42,7 +42,7 @@ export const mapApi = { focusListing() {}, hoverPin() {}, closeMapCard() {}, isV
 export const byId = id => S.listings.find(x => x.id === id)
 export const isMine = x => !!(S.user && x.owner.id != null && x.owner.id === S.user.id)
 export const nextFree = x => { const tk = todayKey(); return [...x.avail].filter(k => k >= tk).sort()[0] }
-export const ownerKey = o => o.id != null ? 'u' + o.id : 'seed:' + o.name
+export const ownerKey = o => 'u' + o.id
 export function listingRating(x) { const rs = S.reviews.filter(r => r.type === 'listing' && r.listingId === x.id); return { n: rs.length, avg: avgOf(rs.map(r => r.stars)) } }
 export function hostRating(key) { const rs = S.reviews.filter(r => r.type === 'listing' && r.ownerKey === key); return { n: rs.length, avg: avgOf(rs.map(r => r.hostStars)) } }
 export function guestRating(userId) { const rs = S.reviews.filter(r => r.type === 'guest' && r.guestId === userId); return { n: rs.length, avg: avgOf(rs.map(r => r.stars)) } }
@@ -254,7 +254,7 @@ export async function sendMsg() {
   let fresh
   try { fresh = await api(`/api/conversatii/${c.id}/mesaje`, { method: 'POST', body: { text } }) }
   catch (e) { c.messages.pop(); S.ui.msgDraft = text; emit(); return fail(e) }
-  /* Răspunsurile automate (suport / proprietari demo) apar după un „scrie…” scurt. */
+  /* Răspunsurile automate ale suportului apar după un „scrie…” scurt. */
   const lastMine = fresh.messages.map(m => m.from).lastIndexOf('me')
   const replies = fresh.messages.slice(lastMine + 1)
   if (!replies.length) { upsertConv(fresh); return emit() }
