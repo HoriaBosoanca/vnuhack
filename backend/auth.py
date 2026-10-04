@@ -10,6 +10,7 @@ from mesaje import notify_support
 from util import current_user, fetch_one, hash_pass, new_token, pool, user_json
 
 router = APIRouter(prefix="/api/auth", tags=["cont"])
+profil_router = APIRouter(prefix="/api", tags=["profil"])
 TERMS_VERSION = "1.0"
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$")
 
@@ -78,6 +79,16 @@ async def logout(request: Request, authorization: str | None = Header(None)):
         async with pool(request).connection() as conn:
             await conn.execute("DELETE FROM sesiuni WHERE token = %s", (authorization[7:],))
     return {"ok": True}
+
+
+@profil_router.get("/utilizatori/{user_id}")
+async def profil(user_id: int, request: Request):
+    """Datele publice pentru pagina de profil (restul — anunțuri, recenzii — vin din listele publice)."""
+    async with pool(request).connection() as conn:
+        u = await fetch_one(conn, "SELECT id, name, created_at FROM utilizatori WHERE id = %s", (user_id,))
+    if not u:
+        raise HTTPException(404, "Utilizatorul nu există.")
+    return {"id": u["id"], "name": u["name"], "since": str(u["created_at"].year)}
 
 
 @router.get("/me")

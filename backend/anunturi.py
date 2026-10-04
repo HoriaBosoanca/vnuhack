@@ -84,7 +84,7 @@ class AnuntNou(BaseModel):
     lng: float
     geo: Literal["ok", "approx"] = "ok"
     phone: str
-    noise: str
+    noise: str = ""  # limita de zgomot nu mai apare în formular
     access: str
     desc: str = ""
     rules: list[str] = Field(default=[], max_length=20)
@@ -120,7 +120,8 @@ async def publica(b: AnuntNou, request: Request, u=Depends(current_user)):
     location = f"{city}, București" if county == "București" else f"{city}, jud. {county}"
     # Dovada declarației și a avertismentului de risc acceptate la publicare.
     declaration = {"at": datetime.now(timezone.utc).isoformat(), "termsVersion": TERMS_VERSION,
-                   "riskWarning": {"at": b.riskAckAt.isoformat(), "valuablesRemoved": True, "risksAssumed": True, "platformNotLiable": True}}
+                   "riskWarning": {"at": b.riskAckAt.isoformat(), "valuablesRemoved": True, "risksAssumed": True, "platformNotLiable": True,
+                                   "bodilyInjuryNotLiable": True}}
     rules = list(dict.fromkeys(r.strip()[:150] for r in b.rules if r.strip()))
     async with pool(request).connection() as conn:
         row = await fetch_one(conn, """

@@ -9,10 +9,9 @@ import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
 
 const MAX_PHOTOS = 10, MAX_MB = 10
-const NOISE = ['Normal — până la 55 dB', 'Moderat — până la 65 dB', 'Ridicat — până la 80 dB', 'Fără limită specificată']
 const GEO_HINT = 'Completează județul, localitatea și adresa. Pinul se pune singur; îl poți trage pe locul exact.'
 const empty = () => ({
-  title: '', type: 'storage', price: '', area: '', unit: 'lună', county: '', city: '', address: '', phone: '', noise: NOISE[0],
+  title: '', type: 'storage', price: '', area: '', unit: 'lună', county: '', city: '', address: '', phone: '',
   access: 'custom', from: '08:00', to: '22:00', desc: '', isu: false, ext: false, evac: false, smoke: false, isuNo: '', declare: false,
 })
 
@@ -33,9 +32,10 @@ function RiskModal({ onConfirm }) {
         <ul>
           <li>ai citit și accepți integral <a href="#" onClick={e => { e.preventDefault(); openTerms() }}>Termenii și condițiile</a> SPAȚIU;</li>
           <li><b>ai luat sau ai pus în siguranță toate obiectele de valoare</b> din spațiu (bani, bijuterii, documente, electronice și altele);</li>
-          <li><b>îți asumi toate riscurile</b> legate de închirierea spațiului: pagube, furturi, accidente, incendii;</li>
+          <li><b>îți asumi toate riscurile</b> legate de închirierea spațiului: pagube, furturi, accidente, incendii, vătămări corporale;</li>
           <li><b>îți asumi întreaga răspundere legală</b> pentru spațiu și pentru informațiile din anunț;</li>
-          <li><b>compania SPAȚIU nu este responsabilă</b> pentru nicio pagubă, pierdere sau incident legat de spațiul tău sau de închirierea lui, în limita permisă de lege.</li>
+          <li><b>compania SPAȚIU nu este responsabilă</b> pentru nicio pagubă, pierdere sau incident legat de spațiul tău sau de închirierea lui, în limita permisă de lege;</li>
+          <li><b>compania SPAȚIU nu își asumă nicio răspundere pentru vătămări corporale</b> (răniri, accidentări, îmbolnăviri sau deces) suferite de tine, de chiriași, de invitații lor sau de terți în legătură cu spațiul tău sau cu folosirea lui, în limita permisă de lege.</li>
         </ul>
         <Field err={err}><label className="check"><input type="checkbox" checked={agree} onChange={e => { setAgree(e.target.checked); if (e.target.checked) setErr('') }} /><span>Am citit, am înțeles și sunt de acord cu toate cele de mai sus.</span></label></Field>
       </div>
@@ -148,7 +148,7 @@ export default function PublishModal() {
     const payload = {
       title: v('title'), type: f.type, price: +v('price'), unit: f.unit, area: +v('area'), county: v('county'), city: v('city'), address: v('address'),
       lat: g.lat, lng: g.lng, geo: g.approx ? 'approx' : 'ok', phone: v('phone'), avail: [...days].sort(),
-      noise: f.noise.replace(/^.*până la /, '≤').replace('Fără limită specificată', 'Fără limită'), access: { custom: `${f.from}–${f.to}`, '24/7': '24/7', owner: 'Doar cu proprietarul' }[f.access],
+      access: { custom: `${f.from}–${f.to}`, '24/7': '24/7', owner: 'Doar cu proprietarul' }[f.access],
       desc: v('desc'), rules: [...rules],
       safety: { isu: f.isu, isuNo: f.isu ? v('isuNo') : '', extinguisher: f.ext, evacuation: f.evac, smoke: f.smoke },
       photos: await Promise.all(photos.map(p => blobToDataURL(p.blob))),
@@ -177,7 +177,6 @@ export default function PublishModal() {
         <div className="field full"><label>Locația pe hartă</label><div className="pub-map" ref={mapEl} />
           <div className="geo-row"><span className="hint">{geoInfo}</span><button type="button" className="btn sm" onClick={() => geocodeForm(true)}>📍 Găsește adresa pe hartă</button></div></div>
         <Field err={errs.phone}><label htmlFor="fPhone">Telefon de contact *</label><input id="fPhone" type="tel" autoComplete="tel" placeholder="ex. 0722 123 456" value={f.phone} onChange={set('phone', 'phone')} /><span className="hint">Apare în pagina anunțului</span></Field>
-        <div className="field"><label htmlFor="fNoise">Limită de zgomot</label><select id="fNoise" value={f.noise} onChange={set('noise')}>{NOISE.map(n => <option key={n}>{n}</option>)}</select></div>
         <Field full err={errs.access}><label htmlFor="fAccess">Program de acces</label>
           <select id="fAccess" value={f.access} onChange={e => { set('access')(e); if (e.target.value !== 'custom') clear('access') }}><option value="custom">Interval orar (alegi tu orele)</option><option value="24/7">Non-stop (24/7)</option><option value="owner">Doar cu proprietarul</option></select>
           {f.access === 'custom' && <>

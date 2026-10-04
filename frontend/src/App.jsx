@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   useStore, S, loadAll, filteredListings, setFilter, resetFilters, activeFilterCount, toggleFav, openDetail,
-  openPublish, openMessages, openAccount, openTerms, openSupport, listingRating, mapApi, anyOpen, closeTop,
+  openPublish, openMessages, openAccount, openTerms, openHelp, openSupport, listingRating, mapApi, anyOpen, closeTop, closeM,
   unreadCount, emit,
 } from './lib/store'
 import { COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtPrice, label, ruleKey } from './lib/utils'
 import MapPanel from './components/MapPanel'
-import { Avatar, RatingLine } from './components/ui'
+import { Avatar, RatingLine, Modal } from './components/ui'
+import Calendar from './components/Calendar'
+import ProfileModal from './components/ProfileModal'
 import DetailModal from './components/DetailModal'
 import PublishModal from './components/PublishModal'
 import MessagesModal from './components/MessagesModal'
@@ -26,7 +28,7 @@ function Header() {
       <nav>
         <a onClick={() => { resetFilters(); document.querySelector('.layout').scrollIntoView({ behavior: 'smooth' }) }}>Explorează</a>
         <a onClick={() => openTerms()}>Termeni și condiții</a>
-        <a className="help-link" onClick={openSupport} title="Scrie-ne în Mesaje" aria-label="Ai nevoie de ajutor?"><span className="full">Ai nevoie de ajutor?</span><span className="short">Ajutor</span></a>
+        <a className="help-link" onClick={openHelp} title="Contactează echipa SPAȚIU" aria-label="Ai nevoie de ajutor?"><span className="full">Ai nevoie de ajutor?</span><span className="short">Ajutor</span></a>
       </nav>
       <div className="header-actions">
         <button className="btn" onClick={openPublish} aria-label="Publică un spațiu">＋<span className="lbl">Publică un spațiu</span></button>
@@ -38,21 +40,18 @@ function Header() {
 }
 
 function Hero() {
-  const f = useStore().ui.filters
+  const s = useStore(), f = s.ui.filters, nf = activeFilterCount()
   return (
     <section className="hero"><div className="hero-in"><div className="hero-main">
       <h1>Găsește spațiul pentru ceea ce ai nevoie.</h1>
-      <p>Închiriază case, săli, curți, garaje sau spații de depozitare — de la câteva ore până la luni.</p>
       <div className="search">
         <input id="search" value={f.q} onChange={e => setFilter({ q: e.target.value })} placeholder="Ex. garaj pentru depozitare, casă pentru petrecere..." />
-        <select id="type" value={f.type} onChange={e => setFilter({ type: e.target.value })}>
-          <option value="all">Orice tip</option><option value="event">Evenimente</option><option value="storage">Depozitare</option><option value="work">Lucru</option><option value="leisure">Timp liber</option>
-        </select>
-        <select id="duration" value={f.duration} onChange={e => setFilter({ duration: e.target.value })}>
-          <option value="all">Orice durată</option><option value="hour">Ore</option><option value="day">Zi</option><option value="month">Lună</option>
-        </select>
         <button className="btn primary" onClick={() => document.querySelector('.layout').scrollIntoView({ behavior: 'smooth' })}>Caută</button>
       </div>
+      <div className="hero-filters">
+        <button className={`chip${nf ? ' active' : ''}`} id="fltBtn" onClick={() => { S.ui.fltOpen = !S.ui.fltOpen; emit() }} aria-expanded={s.ui.fltOpen} aria-controls="filters">⚙ Filtre{nf ? ` (${nf})` : ''}</button>
+      </div>
+      {s.ui.fltOpen && <Filters />}
     </div></div></section>
   )
 }
@@ -67,12 +66,18 @@ function Filters() {
   return (
     <div className="filters" id="filters">
       <div className="fgrid">
+        <div className="field"><label htmlFor="type">Tip spațiu</label>
+          <select id="type" value={f.type} onChange={e => setFilter({ type: e.target.value })}>
+            <option value="all">Orice tip</option><option value="event">Evenimente</option><option value="storage">Depozitare</option><option value="work">Lucru</option><option value="leisure">Timp liber</option>
+          </select></div>
+        <div className="field"><label htmlFor="duration">Durată</label>
+          <select id="duration" value={f.duration} onChange={e => setFilter({ duration: e.target.value })}>
+            <option value="all">Orice durată</option><option value="hour">Ore</option><option value="day">Zi</option><option value="month">Lună</option>
+          </select></div>
         <div className="field"><label htmlFor="fltCounty">Județ</label>
           <select id="fltCounty" value={f.county} onChange={e => setFilter({ county: e.target.value })}><option value="">Toate județele</option>{COUNTY_NAMES.map(c => <option key={c}>{c}</option>)}</select></div>
         <div className="field"><label htmlFor="fltMin">Preț (lei / unitate)</label>
           <div className="time-row"><input id="fltMin" type="number" min="0" placeholder="min" value={f.min} onChange={e => setFilter({ min: e.target.value })} /><span>–</span><input id="fltMax" type="number" min="0" placeholder="max" value={f.max} onChange={e => setFilter({ max: e.target.value })} aria-label="Preț maxim" /></div></div>
-        <div className="field"><label htmlFor="fltNoise">Zgomot permis</label>
-          <select id="fltNoise" value={f.noise} onChange={e => setFilter({ noise: e.target.value })}><option value="0">Oricât</option><option value="55">Cel puțin 55 dB (liniștit)</option><option value="65">Cel puțin 65 dB (moderat)</option><option value="80">Cel puțin 80 dB (muzică, petreceri)</option><option value="999">Fără limită</option></select></div>
         <div className="field"><label htmlFor="fltAccess">Interval de acces</label>
           <select id="fltAccess" value={f.access} onChange={e => setFilter({ access: e.target.value })}><option value="any">Oricare</option><option value="24/7">Doar non-stop (24/7)</option><option value="range">Să fie deschis între…</option></select>
           {f.access === 'range' && <div className="time-row" style={{ marginTop: 6 }}>
@@ -80,7 +85,9 @@ function Filters() {
             <select value={f.to} onChange={e => setFilter({ to: e.target.value })} aria-label="Până la ora">{HOURS_END.map(h => <option key={h}>{h}</option>)}</select>
           </div>}
         </div>
-        <div className="field full"><label>Reguli ale casei <span className="hint">· arată doar anunțurile care au toate regulile alese</span></label>
+        <div className="field full cal-field"><label>Disponibilitate <span className="hint">· alege zilele sau perioadele dorite (click sau trage peste zile); vezi doar spațiile libere în toate zilele alese</span></label>
+          <Calendar mode="edit" days={f.days} onChange={d => setFilter({ days: d })} /></div>
+        <div className="field full"><label>Reguli ale casei <span className="hint">· bifează o regulă ca să vezi doar spațiile unde NU se aplică (ex. „Fumatul interzis” → spații unde se poate fuma)</span></label>
           <div className="rule-presets">{[...seen.keys()].map(k => { const on = f.rules.includes(k); return <button key={k} type="button" className={`chip${on ? ' active' : ''}`} aria-pressed={on} onClick={() => toggleRule(k)}>{seen.get(k)}</button> })}</div></div>
       </div>
       <div className="form-actions" style={{ marginTop: 12 }}><button className="btn sm" onClick={resetFilters}>Resetează filtrele</button></div>
@@ -101,16 +108,24 @@ function Card({ x }) {
         <h3>{x.title}</h3><div className="location">📍 {x.location}</div>
         <div className="price">{fmtPrice(x.price)} lei <span>/ {x.unit}</span></div>
         <RatingLine r={listingRating(x)} />
-        <div className="specs"><span className="spec">{x.area} m²</span><span className="spec">🔊 {x.noise}</span><span className="spec">🔑 {x.access}</span>{x.safety.isu && <span className="spec ok">🧯 Autorizat ISU</span>}</div>
+        <div className="specs"><span className="spec">{x.area} m²</span><span className="spec">🔑 {x.access}</span>{x.safety.isu && <span className="spec ok">🧯 Autorizat ISU</span>}</div>
       </div>
     </article>
   )
 }
 
-const CHIPS = [['all', 'Toate'], ['storage', '📦 Depozitare'], ['event', '🎉 Evenimente'], ['work', '💻 Lucru'], ['leisure', '🌿 Relaxare']]
+/* Cardurile apar cu o animație când intră în ecran (ca în HTML); fără animație dacă utilizatorul a cerut „reduce motion”. */
+const REDUCE_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches
+let cardIO = null
+function revealCards() {
+  if (REDUCE_MOTION || !window.IntersectionObserver) return
+  cardIO = cardIO || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); cardIO.unobserve(e.target) } }), { threshold: .08, rootMargin: '0px 0px -40px 0px' })
+  document.querySelectorAll('.cards .card:not(.cv)').forEach((c, i) => { c.classList.add('cv'); c.style.setProperty('--d', (i % 4) * .08 + 's'); cardIO.observe(c) })
+}
 
 function Explore() {
-  const s = useStore(), data = filteredListings(), nf = activeFilterCount(), layoutRef = useRef(null)
+  const s = useStore(), data = filteredListings(), layoutRef = useRef(null)
+  useEffect(revealCards)
   const [instant, setInstant] = useState(false)
   /* La pornire, harta ascunsă se aplică fără animație. */
   useEffect(() => { if (s.ui.mapHiddenInstant) { setInstant(true); requestAnimationFrame(() => setInstant(false)); S.ui.mapHiddenInstant = false } }, [s.ui.mapHiddenInstant])
@@ -120,8 +135,6 @@ function Explore() {
       onTransitionEnd={e => { if (e.propertyName === 'grid-template-columns') mapApi.invalidate() }}>
       <section className="left">
         <div className="toolbar">
-          {CHIPS.map(([t, l]) => <button key={t} className={`chip${s.ui.filters.type === t ? ' active' : ''}`} onClick={() => setFilter({ type: t })}>{l}</button>)}
-          <button className={`chip${nf ? ' active' : ''}`} id="fltBtn" onClick={() => { S.ui.fltOpen = !S.ui.fltOpen; emit() }} aria-expanded={s.ui.fltOpen} aria-controls="filters">⚙ Filtre{nf ? ` (${nf})` : ''}</button>
           <label className="sort-label" htmlFor="sortBy">Sortează</label>
           <select id="sortBy" className="sort-select" value={s.ui.filters.sort} onChange={e => setFilter({ sort: e.target.value })} aria-label="Sortează proprietățile">
             <option value="default">Relevanță</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
@@ -129,7 +142,6 @@ function Explore() {
           </select>
           <span className="count">{data.length}{data.length === 1 ? ' spațiu disponibil' : ' spații disponibile'}</span>
         </div>
-        {s.ui.fltOpen && <Filters />}
         <div className="cards">{data.map(x => <Card key={x.id} x={x} />)}</div>
         <div className="empty" style={{ display: data.length ? 'none' : 'block' }}>Nu am găsit spații pentru criteriile alese. Încearcă alt tip sau altă durată.</div>
       </section>
@@ -138,15 +150,49 @@ function Explore() {
   )
 }
 
+/* „Ai nevoie de ajutor?” → pop-up „Nu ezita să ne contactezi” → conversația cu echipa SPAȚIU. */
+function HelpModal() {
+  return (
+    <Modal name="help" id="helpModal" boxClass="modalbox narrow" boxProps={{ style: { textAlign: 'center' } }}>
+      <div className="modalhead" style={{ justifyContent: 'flex-end' }}><button className="close" onClick={() => closeM('help')} aria-label="Închide">×</button></div>
+      <div style={{ fontSize: 38, marginTop: -6 }}>💬</div>
+      <h2 style={{ fontFamily: 'var(--serif)', fontWeight: 600, margin: '8px 0 6px' }}>Nu ezita să ne contactezi</h2>
+      <p className="hint" style={{ fontSize: 14, margin: '0 0 18px' }}>Echipa SPAȚIU te ajută cu orice întrebare sau problemă. Te ducem direct în conversația cu noi.</p>
+      <div className="form-actions" style={{ justifyContent: 'center' }}>
+        <button className="btn" onClick={() => closeM('help')}>Mai târziu</button>
+        <button className="btn primary" onClick={() => { closeM('help'); openSupport() }}>Scrie echipei SPAȚIU</button>
+      </div>
+    </Modal>
+  )
+}
+
+/* Animații la scroll (ca în HTML): secțiunile apar treptat, fundalul din hero are parallax, header-ul primește umbră. */
+function useScrollEffects() {
+  useEffect(() => {
+    if (REDUCE_MOTION || !window.IntersectionObserver) return
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .1 })
+    const add = (sel, fade) => document.querySelectorAll(sel).forEach((el, i) => { el.classList.add('sr'); if (fade) el.classList.add('fade'); el.style.setProperty('--d', (i * .1) + 's'); io.observe(el) })
+    add('.hero h1,.hero .search,.hero-filters'); add('.toolbar'); add('.mapcol', true); add('footer')
+    const hero = document.querySelector('.hero'), hd = document.querySelector('header'); let tick = false
+    const upd = () => {
+      tick = false; const y = scrollY; hd && hd.classList.toggle('scrolled', y > 8)
+      if (hero && y < hero.offsetHeight + 200) { hero.style.setProperty('--py', (y * .3).toFixed(1) + 'px'); hero.style.setProperty('--ho', Math.max(0, 1 - y / (hero.offsetHeight * .9)).toFixed(2)) }
+    }
+    const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
+    addEventListener('scroll', onScroll, { passive: true }); upd()
+    return () => { removeEventListener('scroll', onScroll); io.disconnect() }
+  }, [])
+}
+
 function Footer() {
   const link = fn => e => { e.preventDefault(); fn() }
   return (
     <footer>
       <div className="logo">SPAȚIU<span>.</span></div>
       <a href="#" onClick={link(() => openTerms())}>Termeni și condiții</a>
+      <a href="#" onClick={link(openHelp)}>Ai nevoie de ajutor?</a>
       <a href="#" onClick={link(() => openMessages())}>Mesaje</a>
       <a href="#" onClick={link(openPublish)}>Publică un spațiu</a>
-      <a href="#" onClick={link(openSupport)}>Ai nevoie de ajutor?</a>
       <span className="copy">© 2026 SPAȚIU</span>
     </footer>
   )
@@ -155,6 +201,7 @@ function Footer() {
 export default function App() {
   const s = useStore()
   useEffect(() => { loadAll() }, [])
+  useScrollEffects()
   /* Fără scroll pe pagină cât timp e deschisă o fereastră. */
   const open = anyOpen()
   useEffect(() => { document.body.classList.toggle('noscroll', open) }, [open])
@@ -169,8 +216,10 @@ export default function App() {
     <Explore />
     <Footer />
     {/* Ordinea contează: ferestrele de mai jos stau deasupra celor de mai sus. */}
+    <HelpModal />
     <DetailModal />
     <PublishModal />
+    <ProfileModal />
     <MessagesModal />
     <AccountModal />
     <AuthModal />

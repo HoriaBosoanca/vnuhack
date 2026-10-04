@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS anunturi (
     lat           DOUBLE PRECISION NOT NULL,
     lng           DOUBLE PRECISION NOT NULL,
     geo           TEXT NOT NULL DEFAULT 'ok',
-    noise         TEXT NOT NULL,
+    noise         TEXT NOT NULL DEFAULT '',  -- nu mai e cerut la publicare; păstrat pentru anunțurile vechi
     access        TEXT NOT NULL,
     description   TEXT NOT NULL DEFAULT '',
     rules         TEXT[] NOT NULL DEFAULT '{}',
@@ -99,15 +99,19 @@ CREATE TABLE IF NOT EXISTS recenzii (
 CREATE TABLE IF NOT EXISTS conversatii (
     id           SERIAL PRIMARY KEY,
     user_id      INTEGER NOT NULL REFERENCES utilizatori(id) ON DELETE CASCADE,  -- cine a scris primul
-    owner_id     INTEGER,             -- proprietarul anunțului; NULL = conversația cu suportul
-    listing_id   INTEGER,             -- NULL = conversația cu Echipa SPAȚIU
+    owner_id     INTEGER,             -- celălalt utilizator (proprietarul anunțului sau destinatarul unui mesaj direct); NULL = suport
+    listing_id   INTEGER,             -- NULL = mesaj direct (din profil) sau conversația cu Echipa SPAȚIU
     owner_name   TEXT NOT NULL,
     user_unread  INTEGER NOT NULL DEFAULT 0,
     owner_unread INTEGER NOT NULL DEFAULT 0,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_conv_listing ON conversatii (user_id, listing_id) WHERE listing_id IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS uq_conv_suport ON conversatii (user_id) WHERE listing_id IS NULL;
+-- o singură conversație cu suportul per utilizator și una singură între doi utilizatori (mesaje directe)
+DROP INDEX IF EXISTS uq_conv_suport;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_conv_suport2 ON conversatii (user_id) WHERE listing_id IS NULL AND owner_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_conv_direct ON conversatii (LEAST(user_id, owner_id), GREATEST(user_id, owner_id)) WHERE listing_id IS NULL AND owner_id IS NOT NULL;
+ALTER TABLE anunturi ALTER COLUMN noise SET DEFAULT '';
 CREATE TABLE IF NOT EXISTS mesaje (
     id         SERIAL PRIMARY KEY,
     conv_id    INTEGER NOT NULL REFERENCES conversatii(id) ON DELETE CASCADE,

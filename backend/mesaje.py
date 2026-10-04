@@ -11,7 +11,7 @@ SUPORT = "Echipa SPAȚIU"
 
 async def notify_support(conn, user_id: int, text: str):
     """Trimite un mesaj automat de la Echipa SPAȚIU (confirmări de rezervare, bun venit etc.)."""
-    c = await fetch_one(conn, "SELECT id FROM conversatii WHERE user_id = %s AND listing_id IS NULL", (user_id,))
+    c = await fetch_one(conn, "SELECT id FROM conversatii WHERE user_id = %s AND listing_id IS NULL AND owner_id IS NULL", (user_id,))
     if not c:
         c = await fetch_one(conn, "INSERT INTO conversatii (user_id, owner_name) VALUES (%s, %s) RETURNING id", (user_id, SUPORT))
     await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (c["id"], text))
@@ -34,6 +34,7 @@ async def conversations_for(conn, me: int, only_id: int | None = None) -> list[d
             "id": c["id"],
             "with": c["owner_name"] if is_user else c["user_name"],
             "listingId": c["listing_id"],
+            "direct": c["listing_id"] is None and c["owner_id"] is not None,  # mesaj direct din pagina de profil
             "unread": c["user_unread"] if is_user else c["owner_unread"],
             "created": iso(c["created_at"]),
             "messages": [{"from": "me" if m["sender_id"] == me else "them", "text": m["text"], "t": iso(m["created_at"])}
@@ -49,6 +50,10 @@ SUPORT_SALUT = "Bună! Dacă ai orice problemă sau întâmpini orice dificultat
 
 class ConvNoua(BaseModel):
     listingId: int
+
+
+class ConvDirecta(BaseModel):
+    userId: int
 
 
 class MesajNou(BaseModel):
@@ -82,10 +87,29 @@ async def deschide(body: ConvNoua, request: Request, u=Depends(current_user)):
 async def suport(request: Request, u=Depends(current_user)):
     """„Ai nevoie de ajutor?”: deschide (sau creează, cu un mesaj de salut) conversația cu Echipa SPAȚIU."""
     async with pool(request).connection() as conn:
-        c = await fetch_one(conn, "SELECT id FROM conversatii WHERE user_id = %s AND listing_id IS NULL", (u["id"],))
+        c = await fetch_one(conn, "SELECT id FROM conversatii WHERE user_id = %s AND listing_id IS NULL AND owner_id IS NULL", (u["id"],))
         if not c:
             c = await fetch_one(conn, "INSERT INTO conversatii (user_id, owner_name) VALUES (%s, %s) RETURNING id", (u["id"], SUPORT))
             await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (c["id"], SUPORT_SALUT))
+        return (await conversations_for(conn, u["id"], c["id"]))[0]
+
+
+@router.post("/direct")
+async def direct(body: ConvDirecta, request: Request, u=Depends(current_user)):
+    """„Trimite mesaj” din profilul unui utilizator: o singură conversație între doi utilizatori, fără anunț."""
+    if body.userId == u["id"]:
+        raise HTTPException(400, "Acesta este profilul tău.")
+    async with pool(request).connection() as conn:
+        peer = await fetch_one(conn, "SELECT id, name FROM utilizatori WHERE id = %s", (body.userId,))
+        if not peer:
+            raise HTTPException(404, "Utilizatorul nu există.")
+        c = await fetch_one(conn, """
+            SELECT id FROM conversatii WHERE listing_id IS NULL
+              AND ((user_id = %(a)s AND owner_id = %(b)s) OR (user_id = %(b)s AND owner_id = %(a)s))
+        """, {"a": u["id"], "b": peer["id"]})
+        if not c:
+            c = await fetch_one(conn, "INSERT INTO conversatii (user_id, owner_id, owner_name) VALUES (%s, %s, %s) RETURNING id",
+                                (u["id"], peer["id"], peer["name"]))
         return (await conversations_for(conn, u["id"], c["id"]))[0]
 
 

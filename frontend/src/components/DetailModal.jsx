@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react'
 import {
   useStore, S, byId, isMine, nextFree, listingRating, hostRating, ownerKey, canCancel, closeM, startBooking,
-  findReview, bookingStarted, openReview,
+  findReview, bookingStarted, openReview, openProfile,
   deleteListing, showOnMap,
 } from '../lib/store'
 import { SAFETY, fmtPrice, fmtDay, fmtDate, fmtRt, fullAddress, label, maskPhone, telHref, avgOf } from '../lib/utils'
 import { Avatar, Modal, CloseBtn, Stars } from './ui'
 import Calendar from './Calendar'
 import { ContactBtn } from './MapPanel'
+
+/* Nume / avatar pe care apeși ca să deschizi profilul utilizatorului. */
+function Who({ id, name, children }) {
+  if (id == null) return children
+  return <button type="button" className="who" onClick={() => openProfile(id)} aria-label={name ? `Vezi profilul lui ${name}` : undefined}>{children}</button>
+}
 
 function Reviews({ x }) {
   const s = useStore()
@@ -26,9 +32,9 @@ function Reviews({ x }) {
       {rs.length ? <>
         <div className="rv-sum"><div className="rv-big">{fmtRt(lr.avg)}</div><div><Stars n={Math.round(lr.avg)} /><div className="hint">Spațiu: {fmtRt(lr.avg)} · Gazdă: {fmtRt(avgOf(rs.map(r => r.hostStars)))}</div></div></div>
         {rs.map(r => (
-          <div className="rv" key={r.id}><Avatar name={r.authorName} />
+          <div className="rv" key={r.id}><Who id={r.authorId} name={r.authorName}><Avatar name={r.authorName} /></Who>
             <div className="rv-body">
-              <div className="rv-head"><b>{r.authorName}</b><span className="hint">{new Date(r.createdAt).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}</span></div>
+              <div className="rv-head"><Who id={r.authorId}><b>{r.authorName}</b></Who><span className="hint">{new Date(r.createdAt).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}</span></div>
               <div><Stars n={r.stars} /> <span className="hint">· gazda {r.hostStars}/5</span></div>
               {r.comment && <p>{r.comment}</p>}
             </div>
@@ -92,7 +98,7 @@ function Detail({ x }) {
     </div>
     <div className="d-grid">
       <div className="d-stat"><small>Suprafață</small>{x.area} m²</div><div className="d-stat"><small>Tarif</small>pe {x.unit}</div>
-      <div className="d-stat"><small>Acces</small>{x.access}</div><div className="d-stat"><small>Zgomot</small>{x.noise}</div>
+      <div className="d-stat"><small>Acces</small>{x.access}</div>
     </div>
     <p className="d-desc">{x.desc || 'Proprietarul nu a adăugat o descriere.'}</p>
     {x.rules && x.rules.length > 0 && <div className="safety"><div className="safety-head"><h3>📋 Reguli ale casei</h3></div><ul className="d-rules">{x.rules.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
@@ -110,8 +116,8 @@ function Detail({ x }) {
       {sf.isu && sf.isuNo && <p className="hint" style={{ margin: '10px 0 0' }}>Nr. autorizație ISU: <b>{sf.isuNo}</b></p>}
       <p className="note">ℹ️ Informații declarate de proprietar pe propria răspundere. SPAȚIU nu verifică documentele, așa că cere autorizația ISU înainte să închiriezi, mai ales pentru evenimente cu invitați.</p>
     </div>
-    <div className="owner-card"><Avatar name={o.name} />
-      <div><b>{o.name}</b><div className="hint">Proprietar, membru din {o.since}</div>
+    <div className="owner-card"><Who id={o.id} name={o.name}><Avatar name={o.name} /></Who>
+      <div><Who id={o.id}><b>{o.name}</b></Who><div className="hint">Proprietar, membru din {o.since}</div>
         {h.n ? <div className="rt" style={{ marginTop: 3 }}>★ {fmtRt(h.avg)} <span className="n">ca gazdă ({h.n} {h.n === 1 ? 'recenzie' : 'recenzii'})</span></div> : <div className="hint">Încă fără recenzii ca gazdă</div>}
       </div>
       <div className="owner-actions" hidden={!!x.removed}>
