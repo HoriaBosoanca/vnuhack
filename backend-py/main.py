@@ -77,7 +77,8 @@ app.include_router(mesaje.router)
 
 @app.get("/health")
 async def health():
-    return {"ok": True}
+    # Render setează RENDER_GIT_COMMIT: așa vezi ce versiune a codului rulează.
+    return {"ok": True, "commit": os.environ.get("RENDER_GIT_COMMIT", "local")[:7]}
 
 
 if __name__ == "__main__":
