@@ -17,7 +17,7 @@ const local = {
 }
 
 export const S = {
-  listings: [], reviews: [], bookingsMine: [], bookingsRecv: [], favs: new Set(local.get('spatiu-favs', [])),
+  listings: [], reviews: [], bookingsMine: [], bookingsRecv: [],
   user: null, conversations: [], loaded: false,
   ui: {
     open: Object.fromEntries(MODALS.map(m => [m, false])),
@@ -173,7 +173,6 @@ export function openTerms(onAccept) { S.ui.termsAccept = onAccept || null; openM
 /* ================== LISTĂ & FILTRE ================== */
 export function setFilter(patch) { Object.assign(S.ui.filters, patch); emit() }
 export function resetFilters() { S.ui.filters = defaultFilters(); emit() }
-export function toggleFav(id) { S.favs.has(id) ? S.favs.delete(id) : S.favs.add(id); local.set('spatiu-favs', [...S.favs]); emit() }
 
 function passFilters(x, f) {
   if (f.county && x.county !== f.county) return false
@@ -231,7 +230,7 @@ export async function deleteListing(id) {
   const x = byId(id); if (!x || !isMine(x)) return
   try {
     const { cancelled: n } = await api(`/api/anunturi/${id}`, { method: 'DELETE' })
-    S.listings = S.listings.filter(l => l !== x); S.favs.delete(id); local.set('spatiu-favs', [...S.favs])
+    S.listings = S.listings.filter(l => l !== x);
     mapApi.closeMapCard(); S.ui.open.detail = false; emit(); refreshBookings().catch(() => {})
     toast(n ? `Anunțul a fost șters definitiv. ${n === 1 ? 'O rezervare a fost anulată și rambursată.' : n + ' rezervări au fost anulate și rambursate.'}` : 'Anunțul a fost retras și șters definitiv.')
   } catch (e) { fail(e) }

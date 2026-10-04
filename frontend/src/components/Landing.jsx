@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import {
-  useStore, S, emit, listingRating, openDetail, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
+  useStore, S, emit, openDetail, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
   openAccount, openHelp, openTerms, unreadCount,
 } from '../lib/store'
 import { fmtPrice } from '../lib/utils'
 
-const DUR = 6500 // cât stă fiecare slide în intro (ms)
 const TYPES = [
   ['event', 'Evenimente', 'Petreceri, nunți, aniversări'],
   ['storage', 'Depozitare', 'Garaje, boxe și depozite'],
@@ -18,90 +17,51 @@ export const scrollToEl = sel => { const el = document.querySelector(sel); el &&
 export const toLayout = () => scrollToEl('.layout')
 const showType = t => { setFilter({ type: t }); toLayout() }
 
-/* Primul rând din descriere, scurtat, ca subtitlu; altfel descrierea categoriei. */
-function eyebrow(x) {
-  const d = (x.desc || '').split(/(?<=[.!?])\s/)[0].trim()
-  if (!d) return TAGLINE[x.type] || ''
-  return d.length > 70 ? d.slice(0, 68).trimEnd() + '…' : d
-}
-
-/* Slide-urile intro-ului: până la 5 spații publicate (cele mai bine notate, apoi cele mai noi), cu pozele lor. */
-function useSlides(listings, reviewsN) {
-  /* Lista de anunțuri e modificată pe loc (ex. la publicare), așa că memo-ul depinde de conținutul ei. */
-  const sig = listings.map(x => `${x.id}:${x.img}:${x.price}`).join('|')
-  return useMemo(() => {
-    const best = [...listings].sort((a, b) => {
-      const ra = listingRating(a), rb = listingRating(b)
-      return (rb.n ? rb.avg : 0) - (ra.n ? ra.avg : 0) || rb.n - ra.n
-    }).slice(0, 5)
-    return best.map(x => ({
-      id: x.id, img: x.img, eye: eyebrow(x), title: x.title,
-      price: `${fmtPrice(x.price)} lei / ${x.unit}`, loc: x.location.replace(' · ', ', '), short: x.title,
-    }))
-  }, [sig, reviewsN])
-}
-
-export function Intro() {
-  const s = useStore(), slides = useSlides(s.listings, s.reviews.length)
-  const [cur, setCur] = useState(0), [cycle, setCycle] = useState(0), [seen, setSeen] = useState(true)
-  const ref = useRef(null), animOn = s.ui.animOn
-  const i = cur < slides.length ? cur : 0, d = slides[i] || null
-  const go = n => { setCur(n); setCycle(c => c + 1) }
-
-  /* Trecerea automată la următorul slide (oprită dacă intro-ul nu se vede, tabul e ascuns sau animațiile sunt oprite). */
-  useEffect(() => {
-    if (!animOn || !seen || slides.length < 2) return
-    const t = setTimeout(() => go((i + 1) % slides.length), DUR)
-    return () => clearTimeout(t)
-  }, [i, cycle, animOn, seen, slides.length])
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const io = window.IntersectionObserver && new IntersectionObserver(es => setSeen(es[0].isIntersecting), { threshold: .3 })
-    io && io.observe(el)
-    const vis = () => setSeen(!document.hidden)
-    document.addEventListener('visibilitychange', vis)
-    /* Parallax și estompare la scroll. */
-    let tick = false
-    const upd = () => {
-      tick = false; const y = scrollY, h = el.offsetHeight
-      if (y <= h) { el.style.setProperty('--ipy', (y * .25).toFixed(1) + 'px'); el.style.setProperty('--ipt', (y * -.1).toFixed(1) + 'px'); el.style.setProperty('--io', Math.max(0, 1 - y / h * 1.25).toFixed(2)) }
-    }
-    const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
-    addEventListener('scroll', onScroll, { passive: true }); upd()
-    return () => { io && io.disconnect(); document.removeEventListener('visibilitychange', vis); removeEventListener('scroll', onScroll) }
-  }, [!!d])
-  /* Fără anunțuri publicate nu arătăm intro-ul (nici poze, nici titluri generice). Cât se încarcă, rămâne doar fundalul. */
-  if (!d) return s.loaded ? null : <section className="intro" id="intro" aria-hidden="true" />
-
-  const open = () => openDetail(d.id)
+/* Arcade decorative (fără poze generice) cât timp nu există anunțuri. */
+function Arches() {
   return (
-    <section className="intro" id="intro" ref={ref} aria-label="Spații în evidență" style={{ '--ivdur': DUR + 'ms' }}>
-      <div className="iv-media" aria-hidden="true">
-        {slides.map((sl, k) => <div key={sl.id} className={`iv-slide${k === i ? ' on' : ''}`}><div className="iv-img" style={{ backgroundImage: `url('${sl.img}')` }} /></div>)}
-      </div>
-      <div className="iv-count" aria-hidden="true"><b>{String(i + 1).padStart(2, '0')}</b><span>/ {String(slides.length).padStart(2, '0')}</span></div>
-      <div className="iv-in">
-        <div className="iv-text swap" key={`${i}-${cycle}`}>
-          <p className="iv-eyebrow">{d.eye}</p>
-          <div className="iv-title">{d.title}</div>
-          <div className="iv-meta">
-            <button type="button" className="iv-cta" onClick={open}>Începe rezervarea</button>
-            <button type="button" className="iv-link" onClick={toLayout}>Descoperă toate spațiile</button>
-            <div className="iv-info"><b>{d.price}</b><span>{d.loc}</span></div>
+    <svg className="ld-arches" viewBox="0 0 520 460" aria-hidden="true">
+      <circle cx="360" cy="120" r="86" fill="#e8d3a6" />
+      <path d="M40 460V250a90 90 0 0 1 180 0v210z" fill="#3f6a4e" />
+      <path d="M82 460V262a48 48 0 0 1 96 0v198z" fill="#2f5240" />
+      <path d="M250 460V200a110 110 0 0 1 220 0v260z" fill="#efe1c6" />
+      <path d="M286 460V224a74 74 0 0 1 148 0v236z" fill="#a9bba5" />
+      <path d="M200 460c0-50 18-80 40-80s40 30 40 80z" fill="#c98a3c" opacity=".85" />
+    </svg>
+  )
+}
+
+/* Partea de sus a site-ului: landing static. Colajul folosește pozele celor mai recente anunțuri. */
+export function Welcome() {
+  const s = useStore()
+  const recent = s.listings.slice(0, 3)
+  const counties = new Set(s.listings.map(x => x.county)).size
+  const owners = new Set(s.listings.map(x => x.owner.id)).size
+  return (
+    <section className="landing" id="intro" aria-label="SPAȚIU">
+      <div className="ld-in">
+        <div className="ld-text">
+          <div className="ld-eyebrow">Închirieri pe ore, zile sau luni</div>
+          <h1 className="ld-title">Spațiul potrivit, <em>exact</em> când ai nevoie de el.</h1>
+          <p className="ld-sub">Case, curți, săli, garaje și boxe închiriate direct de la proprietari. Alegi zilele, plătești sigur și primești biletul pe loc.</p>
+          <div className="ld-cta">
+            <button type="button" className="btn primary big ld-go" onClick={toLayout}>Explorează spațiile <span aria-hidden="true">→</span></button>
+            <button type="button" className="btn big" onClick={openPublish}>Publică un spațiu</button>
           </div>
+          {s.listings.length > 0 && <div className="ld-stats">
+            <div><b>{s.listings.length}</b><span>{s.listings.length === 1 ? 'spațiu publicat' : 'spații publicate'}</span></div>
+            <div><b>{counties}</b><span>{counties === 1 ? 'județ' : 'județe'}</span></div>
+            <div><b>{owners}</b><span>{owners === 1 ? 'proprietar' : 'proprietari'}</span></div>
+          </div>}
         </div>
-        {slides.length > 1 && <ul className="iv-list">
-          {slides.map((sl, k) => (
-            <li key={sl.id}>
-              {/* key cu „cycle” repornește bara de progres a slide-ului activ */}
-              <button type="button" key={k === i ? `on-${cycle}` : 'off'} className={k === i ? 'on' : ''} aria-current={k === i ? 'true' : undefined} aria-label={sl.short}
-                onClick={() => go(k)}><span>{sl.short}</span></button>
-            </li>
-          ))}
-        </ul>}
+        <div className={`ld-art n${recent.length}`}>
+          {recent.length ? recent.map((x, k) => (
+            <button type="button" key={x.id} className={`ld-card c${k + 1}`} style={{ backgroundImage: `url('${x.img}')` }} onClick={() => openDetail(x.id)} aria-label={x.title}>
+              <span className="ld-tag"><b>{x.title}</b>{fmtPrice(x.price)} lei / {x.unit}</span>
+            </button>
+          )) : <Arches />}
+        </div>
       </div>
-      <div className="iv-cue" aria-hidden="true" />
     </section>
   )
 }
