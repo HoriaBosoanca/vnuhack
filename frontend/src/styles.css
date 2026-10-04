@@ -424,3 +424,43 @@ body.no-anim .iv-img{transform:none!important;transition:none}
 .tgl::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s}
 .tgl:checked{background:var(--accent)}.tgl:checked::after{transform:translateX(18px)}
 .tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ===================== Temă: bej / maro / verde, fără zone foarte închise ===================== */
+:root{--night:#4a3a2c;--cream:#fbf5e9;--deep:#3f6a4e;--brown:#4a3a2c;--beige:#f1e6d3;
+ --serif:'Fraunces',Georgia,'Times New Roman',serif}
+/* Fonturile de dinainte: Fraunces (serif) pentru titluri și logo, Figtree pentru text. */
+body{font-family:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif}
+.logo{font-family:var(--serif);font-weight:600;letter-spacing:-.5px;line-height:1}
+header .logo{font-size:28px}
+.iv-title{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:.95}
+.mo-main button,.lb-col h3,.lb-map h2{font-family:var(--serif);font-weight:600}
+.lb-col h3{letter-spacing:-.01em}
+
+/* Intro: umbrire mai ușoară peste poze, în tonuri de maro. */
+.intro{background:#8a7560}
+.intro::after{background:linear-gradient(180deg,#3b2c1f80 0,#3b2c1f00 26%,#3b2c1f00 45%,#3b2c1fb3 100%),linear-gradient(90deg,#3b2c1f4d 0,#3b2c1f00 60%)}
+.iv-cta:hover{color:var(--brown)}
+
+/* Categorii pe fundal bej. */
+.lb-cats{background:var(--beige);color:var(--brown)}
+.lb-col{border-left-color:#dccbb0}
+.lb-col p{color:var(--accent)}
+.lb-names button{color:var(--brown);opacity:.85}
+.lb-names button:hover{color:var(--accent);opacity:1}
+.lb-cats .iv-link{color:var(--brown);border-bottom-color:#4a3a2c66}
+.lb-cats .iv-link:hover{color:var(--accent);border-color:var(--accent)}
+
+/* Secțiunea cu harta: verde, mai transparent. */
+.lb-map{background:linear-gradient(90deg,#3f6a4ed9 0,#3f6a4e99 55%,#3f6a4e4d 100%),url(https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=2000&q=75) center/cover no-repeat,var(--deep)}
+
+/* Meniul pe tot ecranul: bej deschis cu text maro și accente verzi. */
+.menu-ov{background:#f6eedf;color:var(--brown)}
+.mo-top .menu-btn,.mo-top .logo{color:var(--brown)}
+.mo-main button{color:var(--brown)}
+.mo-main button:hover{color:var(--accent)}
+.mo-side h4{color:var(--brass)}
+.mo-side button{color:var(--brown)}
+.mo-side button:hover{color:var(--accent)}
+.mo-foot{border-top-color:#4a3a2c1f;color:#4a3a2c99}
+.mo-foot .iv-link{color:var(--brown);border-bottom-color:#4a3a2c66}
+.mo-foot .iv-link:hover{color:var(--accent);border-color:var(--accent)}

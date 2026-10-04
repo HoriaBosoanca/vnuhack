@@ -164,14 +164,15 @@ function HelpModal() {
 
 /* Animații la scroll (ca în HTML): secțiunile apar treptat, fundalul din hero are parallax, header-ul primește umbră. */
 function useScrollEffects() {
-  /* Header-ul e transparent cât timp e deasupra intro-ului. */
+  /* Header-ul e transparent cât timp e deasupra intro-ului (care lipsește dacă nu există anunțuri). */
+  const hasIntro = !(useStore().loaded && !S.listings.length)
   useEffect(() => {
-    const hd = document.querySelector('header'), intro = document.getElementById('intro'); let tick = false
-    const upd = () => { tick = false; hd.classList.toggle('over', !!intro && scrollY < intro.offsetHeight - 72) }
+    const hd = document.querySelector('header'); let tick = false
+    const upd = () => { tick = false; const intro = document.getElementById('intro'); hd.classList.toggle('over', !!intro && scrollY < intro.offsetHeight - 72) }
     const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
     addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', upd); upd()
     return () => { removeEventListener('scroll', onScroll); removeEventListener('resize', upd) }
-  }, [])
+  }, [hasIntro])
   useEffect(() => {
     if (REDUCE_MOTION || !window.IntersectionObserver) return
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .1 })

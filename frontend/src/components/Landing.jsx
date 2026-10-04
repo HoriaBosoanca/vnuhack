@@ -13,13 +13,6 @@ const TYPES = [
   ['leisure', 'Timp liber', 'Curți și locuri de joacă'],
 ]
 const TAGLINE = Object.fromEntries(TYPES.map(([t, , p]) => [t, p]))
-/* Poze folosite doar cât timp nu există încă anunțuri publicate. */
-const FALLBACK = {
-  event: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=2000&q=75',
-  storage: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=2000&q=75',
-  work: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2000&q=75',
-  leisure: 'https://images.unsplash.com/photo-1558521958-0a228e77e984?auto=format&fit=crop&w=2000&q=75',
-}
 
 export const scrollToEl = sel => { const el = document.querySelector(sel); el && el.scrollIntoView({ behavior: S.ui.animOn ? 'smooth' : 'auto' }) }
 export const toLayout = () => scrollToEl('.layout')
@@ -41,11 +34,10 @@ function useSlides(listings, reviewsN) {
       const ra = listingRating(a), rb = listingRating(b)
       return (rb.n ? rb.avg : 0) - (ra.n ? ra.avg : 0) || rb.n - ra.n
     }).slice(0, 5)
-    if (best.length) return best.map(x => ({
+    return best.map(x => ({
       id: x.id, img: x.img, eye: eyebrow(x), title: x.title,
       price: `${fmtPrice(x.price)} lei / ${x.unit}`, loc: x.location.replace(' · ', ', '), short: x.title,
     }))
-    return TYPES.map(([t, name, tag]) => ({ id: null, type: t, img: FALLBACK[t], eye: tag, title: name, price: 'Fii primul care publică', loc: 'Oriunde în România', short: name }))
   }, [sig, reviewsN])
 }
 
@@ -53,7 +45,7 @@ export function Intro() {
   const s = useStore(), slides = useSlides(s.listings, s.reviews.length)
   const [cur, setCur] = useState(0), [cycle, setCycle] = useState(0), [seen, setSeen] = useState(true)
   const ref = useRef(null), animOn = s.ui.animOn
-  const i = cur < slides.length ? cur : 0, d = slides[i]
+  const i = cur < slides.length ? cur : 0, d = slides[i] || null
   const go = n => { setCur(n); setCycle(c => c + 1) }
 
   /* Trecerea automată la următorul slide (oprită dacă intro-ul nu se vede, tabul e ascuns sau animațiile sunt oprite). */
@@ -64,6 +56,7 @@ export function Intro() {
   }, [i, cycle, animOn, seen, slides.length])
   useEffect(() => {
     const el = ref.current
+    if (!el) return
     const io = window.IntersectionObserver && new IntersectionObserver(es => setSeen(es[0].isIntersecting), { threshold: .3 })
     io && io.observe(el)
     const vis = () => setSeen(!document.hidden)
@@ -77,13 +70,15 @@ export function Intro() {
     const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
     addEventListener('scroll', onScroll, { passive: true }); upd()
     return () => { io && io.disconnect(); document.removeEventListener('visibilitychange', vis); removeEventListener('scroll', onScroll) }
-  }, [])
+  }, [!!d])
+  /* Fără anunțuri publicate nu arătăm intro-ul (nici poze, nici titluri generice). Cât se încarcă, rămâne doar fundalul. */
+  if (!d) return s.loaded ? null : <section className="intro" id="intro" aria-hidden="true" />
 
-  const open = () => d.id != null ? openDetail(d.id) : (d.type ? showType(d.type) : toLayout())
+  const open = () => openDetail(d.id)
   return (
     <section className="intro" id="intro" ref={ref} aria-label="Spații în evidență" style={{ '--ivdur': DUR + 'ms' }}>
       <div className="iv-media" aria-hidden="true">
-        {slides.map((sl, k) => <div key={sl.id ?? sl.type} className={`iv-slide${k === i ? ' on' : ''}`}><div className="iv-img" style={{ backgroundImage: `url('${sl.img}')` }} /></div>)}
+        {slides.map((sl, k) => <div key={sl.id} className={`iv-slide${k === i ? ' on' : ''}`}><div className="iv-img" style={{ backgroundImage: `url('${sl.img}')` }} /></div>)}
       </div>
       <div className="iv-count" aria-hidden="true"><b>{String(i + 1).padStart(2, '0')}</b><span>/ {String(slides.length).padStart(2, '0')}</span></div>
       <div className="iv-in">
@@ -91,14 +86,14 @@ export function Intro() {
           <p className="iv-eyebrow">{d.eye}</p>
           <div className="iv-title">{d.title}</div>
           <div className="iv-meta">
-            <button type="button" className="iv-cta" onClick={open}>{d.id != null ? 'Începe rezervarea' : 'Vezi spațiile'}</button>
+            <button type="button" className="iv-cta" onClick={open}>Începe rezervarea</button>
             <button type="button" className="iv-link" onClick={toLayout}>Descoperă toate spațiile</button>
             <div className="iv-info"><b>{d.price}</b><span>{d.loc}</span></div>
           </div>
         </div>
         {slides.length > 1 && <ul className="iv-list">
           {slides.map((sl, k) => (
-            <li key={sl.id ?? sl.type}>
+            <li key={sl.id}>
               {/* key cu „cycle” repornește bara de progres a slide-ului activ */}
               <button type="button" key={k === i ? `on-${cycle}` : 'off'} className={k === i ? 'on' : ''} aria-current={k === i ? 'true' : undefined} aria-label={sl.short}
                 onClick={() => go(k)}><span>{sl.short}</span></button>
