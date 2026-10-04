@@ -1,7 +1,7 @@
 # SPAȚIU — frontend (React + Vite)
 
 Marketplace pentru închirierea de spații (case, săli, curți, garaje, depozitare).
-Datele (conturi, anunțuri, rezervări, mesaje, recenzii) vin de la backend-ul din `../backend-py`.
+Datele (conturi, anunțuri, rezervări, mesaje, recenzii) vin de la backend-ul din `../backend`.
 
 ```
 npm install

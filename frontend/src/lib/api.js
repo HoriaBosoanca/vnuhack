@@ -1,4 +1,4 @@
-/* ================== LEGĂTURA CU BACKEND-UL (backend-py) ==================
+/* ================== LEGĂTURA CU BACKEND-UL (backend) ==================
    Adresa API-ului se setează în VITE_API_URL (vezi .env.example); implicit backend-ul de pe Render. */
 export const API = (import.meta.env.VITE_API_URL || 'https://vnuhack-backend-py.onrender.com').replace(/\/$/, '')
 
