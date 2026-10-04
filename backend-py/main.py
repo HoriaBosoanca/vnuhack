@@ -14,11 +14,13 @@ Endpoint-uri (toate sub /api; cele marcate cu * cer „Authorization: Bearer <to
     GET  /api/conversatii *   POST /api/conversatii *   POST /api/conversatii/{id}/mesaje *   POST /api/conversatii/{id}/citit *
 """
 
+import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from psycopg_pool import AsyncConnectionPool
 
 import anunturi
@@ -40,7 +42,8 @@ CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(","
 async def lifespan(app: FastAPI):
     if not DATABASE_URL:
         raise RuntimeError("Setează variabila de mediu DATABASE_URL")
-    pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=5, open=False)
+    # prepare_threshold=None: fără prepared statements pe server, ca să meargă prin pooler-ul Neon (PgBouncer).
+    pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=5, open=False, kwargs={"prepare_threshold": None})
     await pool.open()
     async with pool.connection() as conn:
         await init_db(conn)
@@ -50,6 +53,21 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Inchiriere spatii", lifespan=lifespan)
+log = logging.getLogger("uvicorn.error")
+
+
+@app.middleware("http")
+async def erori_neprevazute(request: Request, call_next):
+    """Orice eroare neprevăzută devine un 500 JSON cu mesajul ei (scris și în log).
+    Middleware-ul e în interiorul celui de CORS, așa că și erorile primesc header-ele CORS
+    și browserul arată eroarea reală, nu „CORS header missing”."""
+    try:
+        return await call_next(request)
+    except Exception as e:
+        log.exception("Eroare la %s %s", request.method, request.url.path)
+        return JSONResponse({"detail": f"Eroare de server: {type(e).__name__}: {e}"[:500]}, status_code=500)
+
+
 app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
 app.include_router(auth.router)
 app.include_router(anunturi.router)
