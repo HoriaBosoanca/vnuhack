@@ -1,0 +1,47 @@
+Header: legal stuff
+
+Search bar (cu taguri si filtre)
+
+POST /post
+{
+  "id_ofertant": "",
+  "taguri": [
+    "escape room",
+    "party"
+  ],
+  "data": "4.10.2026"
+
+  "titlu": "Oferta escape room"
+  "descriere": "Adresa este ..., e ff frumos, reguli ..."
+  
+  "tip spatiu": "apartament/casa/terasa/teren"
+  "suprafata": "100" (m2)
+  "nr camere": "3"
+
+  "disponibilitate": 
+  "zile": {
+    "data start": "4.10.2026"
+    "data end": "10.10.2026"
+  },
+  "ore": {
+    "ora start": "12:00",
+    "ora end": "18:00"
+  }
+
+  "pret pre unitate": "100" (RON)
+  "unitate pret": "pe ora/pe zi"
+}
+
+New posts/offers cu filtre
+
+Integrare maps ca sa alegi intr-o anumita zona sau sa iti arate locatia ofertei
+
+buton publicare anunt
+
+login
+
+mesaje cu publicatorul
+
+autorizare plata
+
+anunturi de pe alte siteuri intr-o sectiune auto-generated (cu linkuri), luate cu un scraper

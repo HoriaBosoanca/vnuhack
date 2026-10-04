@@ -1,0 +1,17 @@
+Idei:
+
+Language learning app:
+	Trebuie sa traduci conversatia pt 2 persoane (AI sau conversatie prescrisa)
+
+Marketplace:
+	Pt obiecte
+	Pt joburi (job aggergator)	
+	Pt servicii
+	Pt inchiriat spatii
+
+Liste:
+	Watchlist care gaseste seriale salvate comune cu prietenii
+	Wishlist care te notifica pt reduceri de pe orice site
+
+Tracker:
+	Pt tranzactii si plata produselor individuale (prin scanarea bonului)
