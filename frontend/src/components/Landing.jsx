@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { fmtPrice } from '../lib/utils'
 import {
   useStore, S, emit, openDetail, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
   openAccount, openHelp, openTerms, unreadCount,
@@ -41,7 +42,7 @@ export function Categories() {
 /* Prima secțiune de pe pagină: „Spațiul tău e aproape”, pe tot ecranul.
    La scroll conținutul urcă și se estompează, iar fundalul verde se topește în bejul secțiunii de dedesubt. */
 export function MapPromo() {
-  const ref = useRef(null)
+  const s = useStore(), recent = s.listings.slice(0, 3), ref = useRef(null)
   useEffect(() => {
     const el = ref.current; let tick = false
     const upd = () => { tick = false; const h = el.offsetHeight || 1; el.style.setProperty('--mp', Math.min(1, Math.max(0, scrollY / h)).toFixed(3)) }
@@ -53,6 +54,7 @@ export function MapPromo() {
   return (
     <section className="lb-map mp-top" id="lbMap" ref={ref}>
       <div className="mp-in">
+        <div className="mp-text">
         <div className="mp-eyebrow">Închirieri pe ore, zile sau luni</div>
         <h2>Spațiul tău e <em>aproape</em></h2>
         <p>Vezi pe hartă tot ce se poate închiria în jurul tău și rezervă direct de la proprietar.</p>
@@ -60,6 +62,15 @@ export function MapPromo() {
           <button type="button" className="iv-cta" onClick={openMap}>Deschide harta</button>
           <button type="button" className="iv-link" onClick={() => scrollToEl('#lbCats')}>Descoperă spațiile</button>
         </div>
+        </div>
+        {/* Colaj cu pozele celor mai recente 3 anunțuri; fără anunțuri nu apare nimic. */}
+        {recent.length > 0 && <div className={`mp-art n${recent.length}`}>
+          {recent.map((x, k) => (
+            <button type="button" key={x.id} className={`mp-card c${k + 1}`} style={{ backgroundImage: `url('${x.img}')` }} onClick={() => openDetail(x.id)} aria-label={x.title}>
+              <span className="mp-tag"><b>{x.title}</b>{fmtPrice(x.price)} lei / {x.unit}</span>
+            </button>
+          ))}
+        </div>}
       </div>
       <button type="button" className="mp-cue" onClick={() => scrollToEl('#lbCats')} aria-label="Mergi mai jos"><span>Mai jos</span><i aria-hidden="true" /></button>
     </section>

@@ -474,8 +474,8 @@ header .logo{font-size:28px}
  background:linear-gradient(180deg,#f1e6d300 0,#f1e6d38c 55%,#f1e6d3 100%)}
 .mp-in{position:relative;z-index:2;max-width:1300px;width:100%;margin:0 auto;
  transform:translate3d(0,calc(var(--mp,0) * -110px),0);opacity:calc(1 - var(--mp,0) * 1.5);will-change:transform,opacity}
-.mp-in>*{animation:mpUp 1s cubic-bezier(.2,.7,.2,1) backwards}
-.mp-in>:nth-child(2){animation-delay:.1s}.mp-in>:nth-child(3){animation-delay:.22s}.mp-in>:nth-child(4){animation-delay:.34s}
+.mp-text>*{animation:mpUp 1s cubic-bezier(.2,.7,.2,1) backwards}
+.mp-text>:nth-child(2){animation-delay:.1s}.mp-text>:nth-child(3){animation-delay:.22s}.mp-text>:nth-child(4){animation-delay:.34s}
 @keyframes mpUp{from{opacity:0;transform:translateY(30px)}}
 .mp-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#e8d3a6;margin-bottom:22px}
 .mp-eyebrow::before{content:'';width:34px;height:1px;background:currentColor}
@@ -491,7 +491,26 @@ header .logo{font-size:28px}
 .mp-cue:hover{color:var(--accent)}
 .mp-cue i{position:relative;width:1px;height:46px;background:#4a3a2c33;overflow:hidden}
 .mp-cue i::after{content:'';position:absolute;left:0;top:-50%;width:100%;height:50%;background:var(--accent);animation:ivCue 2.2s ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){.mp-in{transform:none;opacity:1}.mp-in>*{animation:none}}
+.mp-in{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(30px,5vw,80px);align-items:center}
+.mp-text{min-width:0}
+/* Colajul cu 3 anunțuri, în dreapta, peste fundalul verde. */
+.mp-art{position:relative;height:clamp(340px,42vw,520px)}
+.mp-card{position:absolute;border:0;padding:0;border-radius:24px;overflow:hidden;background:#ece1cd center/cover no-repeat;cursor:pointer;
+ border:4px solid #fbf5e9;box-shadow:0 26px 54px #1f2b2059,0 2px 8px #1f2b2026;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .4s;animation:mpCard 1s cubic-bezier(.2,.7,.2,1) backwards}
+.mp-card:hover{transform:translateY(-8px) rotate(0deg) scale(1.03)!important;box-shadow:0 36px 64px #1f2b2066;z-index:3}
+.mp-card.c1{left:0;top:10%;width:60%;height:72%;transform:rotate(-3deg);animation-delay:.25s}
+.mp-card.c2{right:0;top:0;width:45%;height:50%;transform:rotate(3deg);animation-delay:.4s}
+.mp-card.c3{right:6%;bottom:0;width:48%;height:42%;transform:rotate(-1.5deg);animation-delay:.55s}
+.mp-art.n1 .mp-card.c1{left:8%;top:6%;width:84%;height:88%}
+.mp-art.n2 .mp-card.c2{top:auto;bottom:4%;height:58%}
+@keyframes mpCard{from{opacity:0;translate:0 44px}}
+.mp-tag{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;text-align:left;background:#fbf5e9e6;backdrop-filter:blur(6px);border-radius:14px;padding:9px 12px;font:inherit;font-size:13px;color:var(--muted);
+ transform:translateY(6px);opacity:.94;transition:transform .35s,opacity .35s}
+.mp-tag b{font-size:14px;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-card:hover .mp-tag{transform:none;opacity:1}
+/* Pe ecrane mici colajul e sub text, așa că acolo conținutul nu se mai estompează la scroll. */
+@media(max-width:900px){.mp-in{grid-template-columns:1fr;transform:none;opacity:1}.mp-art{height:clamp(280px,78vw,420px)}}
+@media(prefers-reduced-motion:reduce){.mp-in{transform:none;opacity:1}.mp-text>*,.mp-card{animation:none}}
 
 /* ===================== Tranziții și animații pentru butoane și meniuri ===================== */
 .btn,.chip,.tab,.close,.cal-nav,.day,.sort-select,.tgl-dd-btn,.menu-btn,.ic-btn{transition:transform .2s cubic-bezier(.2,.7,.2,1),box-shadow .25s,background-color .25s,border-color .25s,color .25s,opacity .25s}
