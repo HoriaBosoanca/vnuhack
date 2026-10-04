@@ -1,6 +1,6 @@
 import { esc, fmtRanges, fmtLei, fmtDate } from './utils'
 
-/* Biletul e HTML cu stiluri inline, ca să arate la fel în pagină, în fișierul descărcat și în e-mail. */
+/* Biletul e HTML cu stiluri inline, ca să arate la fel în pagină și în fișierul descărcat. */
 export function ticketHTML(b) {
   const cancelled = b.status === 'anulată'
   const row = (k, v) => `<tr><td style="padding:7px 0;color:#7a6e62;font-size:13px;vertical-align:top;width:38%">${k}</td><td style="padding:7px 0;font-size:14px;color:#2e2823;font-weight:600">${v}</td></tr>`

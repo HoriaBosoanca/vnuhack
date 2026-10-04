@@ -5,7 +5,7 @@ import { TILES } from '../lib/geo'
 import { fmtPrice, thumb, label } from '../lib/utils'
 import { RatingLine, SafetyTags } from './ui'
 
-const pinIcon = x => L.divIcon({ className: '', html: `<div class="pin"><div class="pin-img" style="background-image:url('${thumb(x.img)}')"></div><span class="pin-price">${fmtPrice(x.price)} lei</span></div>`, iconSize: [54, 54], iconAnchor: [27, 27] })
+const pinIcon = x => L.divIcon({ className: '', html: `<div class="pin"><div class="pin-img" style="background-image:url('${thumb(x.img)}')"></div><span class="pin-price">${fmtPrice(x.price)} lei/${x.unit}</span></div>`, iconSize: [54, 54], iconAnchor: [27, 27] })
 
 export function ContactBtn({ x, cls = 'btn sm' }) {
   return isMine(x) ? <button className={cls} disabled>Anunțul tău</button> : <button className={cls} onClick={() => startChat(x.id)}>💬 Mesaj</button>

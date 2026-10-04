@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { fmtPrice } from '../lib/utils'
 import {
-  useStore, S, emit, openDetail, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
+  useStore, S, emit, openDetail, byRandom, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
   openAccount, openHelp, openTerms, unreadCount,
 } from '../lib/store'
 
@@ -42,7 +42,7 @@ export function Categories() {
 /* Prima secțiune de pe pagină: „Spațiul tău e aproape”, pe tot ecranul.
    La scroll conținutul urcă și se estompează, iar fundalul verde se topește în bejul secțiunii de dedesubt. */
 export function MapPromo() {
-  const s = useStore(), recent = s.listings.slice(0, 3), ref = useRef(null)
+  const s = useStore(), recent = [...s.listings].sort(byRandom).slice(0, 3), ref = useRef(null)
   useEffect(() => {
     const el = ref.current; let tick = false
     const upd = () => { tick = false; const h = el.offsetHeight || 1; el.style.setProperty('--mp', Math.min(1, Math.max(0, scrollY / h)).toFixed(3)) }

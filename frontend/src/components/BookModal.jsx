@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore, S, byId, closeM, openTerms, goToFirstInvalid, toast, createBooking } from '../lib/store'
 import {
   HOURS, HOURS_END, pad, toMin, todayKey, hoursBetween, fmtHours, fmtLei, fmtPrice, fmtRanges, fullAddress, accessWindow,
-  luhn, cardBrand, expOk, fmtCard, fmtExp, validEmail, feeOf,
+  luhn, cardBrand, expOk, fmtCard, fmtExp, feeOf,
 } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
@@ -35,7 +35,7 @@ function Booking({ x }) {
   const [days, setDays] = useState(() => new Set()), [calKey, setCalKey] = useState(0)
   const [from, setFrom] = useState(start), [to, setTo] = useState(pad((toMin(start) / 60 + 2) % 24) + ':' + start.slice(3))
   const [step, setStep] = useState(1), [paying, setPaying] = useState(false)
-  const [p, setP] = useState({ name: '', card: '', exp: '', cvc: '', email: '', agree: false })
+  const [p, setP] = useState({ name: '', card: '', exp: '', cvc: '', agree: false })
   const { errs, check, clear } = useErrs()
   const c = calc(x, days, from, to), hourly = x.unit === 'oră'
   const setPF = (k, id, fmt) => e => { const v = e.target.type === 'checkbox' ? e.target.checked : fmt ? fmt(e.target.value) : e.target.value; setP(o => ({ ...o, [k]: v })); if (v) clear(id) }
@@ -48,16 +48,15 @@ function Booking({ x }) {
       else if (w) { let a = toMin(c.from), b = a + c.hours * 60; if (a < w[0]) { a += 1440; b += 1440 } if (a < w[0] || b > w[1]) hourErr = `Alege un interval în programul de acces: ${x.access}.` }
     }
     if (!check({ bookCal: c.days.length ? '' : 'Alege cel puțin o zi din calendar.', bFrom: hourErr })) return goToFirstInvalid('bookModal')
-    setP(o => ({ ...o, name: o.name || S.user.name, email: o.email || S.user.email })); setStep(2)
+    setP(o => ({ ...o, name: o.name || S.user.name })); setStep(2)
   }
   async function pay() {
-    const num = p.card.replace(/\s/g, ''), email = p.email.trim()
+    const num = p.card.replace(/\s/g, '')
     const ok = check({
       pName: p.name.trim().length >= 3 ? '' : 'Scrie numele de pe card.',
       pCard: !num ? 'Scrie numărul cardului.' : num.length < 13 || !luhn(num) ? 'Numărul cardului nu e valid.' : '',
       pExp: expOk(p.exp) ? '' : 'Data de expirare nu e validă (LL/AA, în viitor).',
       pCvc: /^\d{3,4}$/.test(p.cvc) ? '' : 'CVC-ul are 3 sau 4 cifre.',
-      pEmail: validEmail(email) ? '' : 'Adresa de e-mail nu e validă.',
       pAgree: p.agree ? '' : 'Bifează ca să poți plăti.',
     })
     if (!ok) return goToFirstInvalid('bookModal')
@@ -65,7 +64,7 @@ function Booking({ x }) {
     setPaying(true)
     // DEMO: plata e simulată. Numărul cardului nu pleacă din browser; serverul primește doar tipul, ultimele 4 cifre și titularul.
     const err = await createBooking({
-      listingId: x.id, days: c.days, hourFrom: c.from, hourTo: c.to, ticketEmail: email,
+      listingId: x.id, days: c.days, hourFrom: c.from, hourTo: c.to, ticketEmail: S.user.email, // biletul nu se mai trimite pe e-mail; adresa apare doar pe bilet
       payment: { brand: cardBrand(num), last4: num.slice(-4), holder: p.name.trim() },
     })
     if (!err) return
@@ -98,7 +97,6 @@ function Booking({ x }) {
         <Field full err={errs.pCard}><label htmlFor="pCard">Număr card *</label><input id="pCard" inputMode="numeric" autoComplete="cc-number" placeholder="1234 5678 9012 3456" maxLength={23} value={p.card} onChange={setPF('card', 'pCard', fmtCard)} /></Field>
         <Field err={errs.pExp}><label htmlFor="pExp">Expiră (LL/AA) *</label><input id="pExp" inputMode="numeric" autoComplete="cc-exp" placeholder="12/28" maxLength={5} value={p.exp} onChange={setPF('exp', 'pExp', fmtExp)} /></Field>
         <Field err={errs.pCvc}><label htmlFor="pCvc">CVC *</label><input id="pCvc" inputMode="numeric" autoComplete="cc-csc" placeholder="123" maxLength={4} value={p.cvc} onChange={setPF('cvc', 'pCvc')} /></Field>
-        <Field full err={errs.pEmail}><label htmlFor="pEmail">Trimite biletul la adresa *</label><input id="pEmail" type="email" autoComplete="email" value={p.email} onChange={setPF('email', 'pEmail')} /></Field>
         <Field full err={errs.pAgree}><label className="check"><input type="checkbox" checked={p.agree} onChange={setPF('agree', 'pAgree')} /><span>Am citit regulile casei și accept <a href="#" onClick={e => { e.preventDefault(); openTerms(() => { setP(o => ({ ...o, agree: true })); clear('pAgree') }) }}>Termenii și condițiile</a>, inclusiv politica de anulare. *</span></label></Field>
       </div>
       <div className="form-actions"><button className="btn" onClick={() => setStep(1)}>‹ Înapoi</button><button className="btn primary" disabled={paying} onClick={pay}>{paying ? 'Se procesează plata…' : `Plătește ${fmtLei(c.total)}`}</button></div>

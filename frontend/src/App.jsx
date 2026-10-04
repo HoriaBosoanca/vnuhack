@@ -132,7 +132,7 @@ function Explore() {
         <div className="toolbar">
           <label className="sort-label" htmlFor="sortBy">Sortează</label>
           <select id="sortBy" className="sort-select" value={s.ui.filters.sort} onChange={e => setFilter({ sort: e.target.value })} aria-label="Sortează proprietățile">
-            <option value="default">Recente</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
+            <option value="random">Aleatoriu</option><option value="default">Recente</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
             <option value="ratingDesc">Rating: mare → mic</option><option value="ratingAsc">Rating: mic → mare</option>
           </select>
           <span className="count">{data.length}{data.length === 1 ? ' spațiu disponibil' : ' spații disponibile'}</span>

@@ -417,6 +417,8 @@ body.no-anim .iv-img{transform:none!important;transition:none}
 .tgl-dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
 .tgl-dd-btn:hover{border-color:#cfb98a}
 .tgl-dd-arrow{font-size:12px;color:var(--muted);transition:transform .2s}.tgl-dd.open .tgl-dd-arrow{transform:rotate(180deg)}
+/* În filtre meniul se deschide în pagină (nu suprapus), altfel secțiunea de căutare (overflow:hidden) tăia ultimele opțiuni. */
+.filters .tgl-dd-menu{position:static;margin-top:6px;box-shadow:none}
 .tgl-dd-menu{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px}
 .tgl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:9px;cursor:pointer;font-size:14px}
 .tgl-row:hover{background:#fbf6ec}

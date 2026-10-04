@@ -1,14 +1,18 @@
 import { useSyncExternalStore } from 'react'
 import { api, absUrl, hasToken, setToken } from './api'
 import { ticketHTML } from './ticket'
-import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, accessWindow, toMin, downloadBlob, normalizeText } from './utils'
+import { avgOf, todayKey, label, ruleKey, accessWindow, toMin, downloadBlob, normalizeText } from './utils'
 
 /* ================== STARE GLOBALĂ ==================
    Un singur „store” mutabil; componentele se abonează cu useStore() și se re-randează la emit().
    Datele (anunțuri, conturi, rezervări, recenzii, mesaje) vin de la backend-ul Python. */
 export const MODALS = ['help', 'detail', 'publish', 'profile', 'msg', 'account', 'auth', 'book', 'ticket', 'review', 'risk', 'terms'] // ordinea = ordinea de suprapunere
 
-export const defaultFilters = () => ({ q: '', type: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'default' })
+/* Ordine aleatorie, stabilă cât timp pagina e deschisă (nu se amestecă la fiecare re-randare). */
+const RANK = new Map()
+export const randRank = x => { if (!RANK.has(x.id)) RANK.set(x.id, Math.random()); return RANK.get(x.id) }
+export const byRandom = (a, b) => randRank(a) - randRank(b)
+export const defaultFilters = () => ({ q: '', type: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'random' })
 
 /* Preferințe locale (doar în acest browser): favorite și harta ascunsă. */
 const local = {
@@ -193,7 +197,8 @@ export function filteredListings() {
     && passFilters(x, f))
   /* Sortare: anunțurile fără recenzii contează ca rating 0; la egalitate, după numărul de recenzii, apoi după preț. */
   const rt = x => { const r = listingRating(x); return r.n ? r.avg : 0 }, nr = x => listingRating(x).n
-  if (f.sort === 'priceAsc') data.sort((a, b) => a.price - b.price)
+  if (f.sort === 'random') data.sort(byRandom)
+  else if (f.sort === 'priceAsc') data.sort((a, b) => a.price - b.price)
   else if (f.sort === 'priceDesc') data.sort((a, b) => b.price - a.price)
   else if (f.sort === 'ratingDesc') data.sort((a, b) => rt(b) - rt(a) || nr(b) - nr(a) || a.price - b.price)
   else if (f.sort === 'ratingAsc') data.sort((a, b) => rt(a) - rt(b) || nr(a) - nr(b) || a.price - b.price)
@@ -326,16 +331,15 @@ export async function createBooking(payload) {
   const x = byId(b.listingId); if (x) b.days.forEach(k => x.avail.delete(k))
   S.bookingsMine.unshift(b); S.ui.open.book = false; S.ui.open.detail = false; emit()
   pollConversations()
-  await sendTicketEmail(b, 'confirm'); openTicket(b.id)
+  openTicket(b.id)
   return null
 }
 export async function cancelBooking(id) {
   let b
   try { b = normBooking(await api(`/api/rezervari/${id}/anuleaza`, { method: 'POST' })) } catch (e) { return fail(e) }
-  const i = S.bookingsMine.findIndex(z => z.id === id); if (i >= 0) S.bookingsMine[i] = { ...b, email: S.bookingsMine[i].email }
+  const i = S.bookingsMine.findIndex(z => z.id === id); if (i >= 0) S.bookingsMine[i] = b
   const x = byId(b.listingId); if (x) { const tk = todayKey(); b.days.filter(k => k >= tk).forEach(k => x.avail.add(k)) }
   emit(); toast('Rezervarea a fost anulată. Rambursarea a fost inițiată.'); pollConversations()
-  await sendTicketEmail(S.bookingsMine[i] || b, 'cancel'); emit()
 }
 
 /* ================== BILET ================== */
@@ -346,23 +350,6 @@ export function downloadTicket(id) {
 }
 export function printTicket() { document.body.classList.add('print-ticket'); window.print() }
 addEventListener('afterprint', () => document.body.classList.remove('print-ticket'))
-export async function resendTicket(id) { const b = findBooking(id); const ok = await sendTicketEmail(b, b.status === 'anulată' ? 'cancel' : 'confirm'); emit(); toast(ok ? 'Biletul a fost retrimis.' : 'E-mailul nu a putut fi trimis.') }
-
-/* ===== Trimiterea biletului pe e-mail (EmailJS) =====
-   Ca biletul să ajungă pe e-mail pe bune: fă un cont gratuit pe emailjs.com, conectează un serviciu de e-mail
-   (ex. Gmail) și creează un șablon, apoi completează cele 3 valori de mai jos. În șablon pune:
-   To Email = {{to_email}}, Subject = {{subject}}, iar în conținut (HTML) = {{{ticket_html}}}. */
-const EMAILJS = { publicKey: '', serviceId: '', templateId: '' }
-async function sendTicketEmail(b, kind) {
-  if (!EMAILJS.publicKey || !EMAILJS.serviceId || !EMAILJS.templateId) { b.email = { status: 'neconfigurat', at: new Date() }; return false }
-  try {
-    const r = await fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-      service_id: EMAILJS.serviceId, template_id: EMAILJS.templateId, user_id: EMAILJS.publicKey,
-      template_params: { to_email: b.ticketEmail, to_name: b.userName, subject: kind === 'cancel' ? `Rezervarea ${b.code} a fost anulată` : `Biletul tău SPAȚIU, rezervarea ${b.code}`,
-        booking_code: b.code, listing_title: b.listingTitle, listing_address: b.address, dates: fmtRanges(b.days), total: fmtLei(b.total), transaction_id: b.payment.txn, status: b.status, ticket_html: ticketHTML(b) } }) })
-    b.email = { status: r.ok ? 'trimis' : 'eroare', at: new Date() }; return r.ok
-  } catch (e) { b.email = { status: 'eroare', at: new Date() }; return false }
-}
 
 /* ================== RECENZII ==================
    • Chiriașul notează SPAȚIUL și GAZDA (proprietarul), după ce începe rezervarea.
