@@ -465,43 +465,33 @@ header .logo{font-size:28px}
 .mo-foot .iv-link{color:var(--brown);border-bottom-color:#4a3a2c66}
 .mo-foot .iv-link:hover{color:var(--accent);border-color:var(--accent)}
 
-/* ===================== Landing static ===================== */
+/* ===================== Prima secțiune: „Spațiul tău e aproape” ===================== */
 .hero{padding-top:64px}
-.landing{position:relative;overflow:hidden;border-bottom:1px solid var(--line);
- background:radial-gradient(900px 520px at 88% 18%,#efe1c6 0,#efe1c600 62%),radial-gradient(700px 480px at 6% 100%,#e4ebdd 0,#e4ebdd00 60%),linear-gradient(180deg,#faf4e8,#f4e9d6);
- padding:clamp(48px,9vh,110px) clamp(20px,5vw,72px) clamp(56px,10vh,110px)}
-.ld-in{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1.08fr .92fr;gap:clamp(30px,5vw,80px);align-items:center}
-.ld-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
-.ld-eyebrow::before{content:'';width:34px;height:1px;background:currentColor}
-/* Titlu într-un serif mai „uman”: Fraunces cu axa SOFT la maxim și un cuvânt în italic. */
-.ld-title{font-family:'Fraunces',Georgia,serif;font-weight:400;font-variation-settings:'SOFT' 100,'opsz' 144;font-size:clamp(42px,6.2vw,92px);line-height:1.02;letter-spacing:-.025em;color:var(--brown);margin:0 0 22px;max-width:14ch}
-.ld-title em{font-style:italic;font-weight:400;color:var(--accent)}
-.ld-sub{font-size:clamp(16px,1.35vw,19px);line-height:1.6;color:var(--muted);max-width:44ch;margin:0 0 32px}
-.ld-cta{display:flex;gap:12px;flex-wrap:wrap}
-.ld-go span{display:inline-block;transition:transform .3s cubic-bezier(.2,.7,.2,1)}.ld-go:hover span{transform:translateX(5px)}
-.ld-stats{display:flex;gap:clamp(22px,4vw,48px);margin-top:42px;padding-top:24px;border-top:1px solid #4a3a2c1f;flex-wrap:wrap}
-.ld-stats div{display:flex;flex-direction:column}
-.ld-stats b{font-family:'Fraunces',Georgia,serif;font-weight:500;font-variation-settings:'SOFT' 100;font-size:clamp(28px,2.6vw,38px);color:var(--brown);line-height:1}
-.ld-stats span{font-size:13px;color:var(--muted);margin-top:4px}
-.ld-art{position:relative;height:clamp(340px,44vw,540px)}
-.ld-arches{position:absolute;inset:0;width:100%;height:100%}
-.ld-card{position:absolute;border:0;padding:0;border-radius:24px;overflow:hidden;background:#ece1cd center/cover no-repeat;cursor:pointer;
- box-shadow:0 24px 50px #4a3a2c2e,0 2px 6px #4a3a2c14;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .4s;animation:ldIn .9s cubic-bezier(.2,.7,.2,1) backwards}
-.ld-card:hover{transform:translateY(-8px) rotate(0deg) scale(1.02)!important;box-shadow:0 34px 60px #4a3a2c38;z-index:3}
-.ld-card.c1{left:0;top:10%;width:60%;height:72%;transform:rotate(-3deg);animation-delay:.15s}
-.ld-card.c2{right:0;top:0;width:45%;height:50%;transform:rotate(3deg);animation-delay:.3s}
-.ld-card.c3{right:6%;bottom:0;width:48%;height:42%;transform:rotate(-1.5deg);animation-delay:.45s}
-.ld-art.n1 .ld-card.c1{left:8%;top:6%;width:84%;height:88%}
-.ld-art.n2 .ld-card.c2{top:auto;bottom:4%;height:58%}
-.ld-tag{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;text-align:left;background:#fbf5e9e6;backdrop-filter:blur(6px);border-radius:14px;padding:9px 12px;font:inherit;font-size:13px;color:var(--muted);
- transform:translateY(6px);opacity:.92;transition:transform .35s,opacity .35s}
-.ld-tag b{font-size:14px;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ld-card:hover .ld-tag{transform:none;opacity:1}
-@keyframes ldIn{from{opacity:0;translate:0 40px}}
-@keyframes ldUp{from{opacity:0;transform:translateY(26px)}}
-.ld-text>*{animation:ldUp .9s cubic-bezier(.2,.7,.2,1) backwards}
-.ld-text>:nth-child(2){animation-delay:.08s}.ld-text>:nth-child(3){animation-delay:.16s}.ld-text>:nth-child(4){animation-delay:.24s}.ld-text>:nth-child(5){animation-delay:.32s}
-@media(max-width:900px){.ld-in{grid-template-columns:1fr}.ld-art{height:clamp(300px,80vw,440px)}.ld-title{max-width:none}}
+.lb-map.mp-top{min-height:calc(100vh - 72px);min-height:calc(100svh - 72px);overflow:hidden;isolation:isolate;align-items:center;
+ padding:clamp(70px,12vh,140px) clamp(20px,5vw,72px) clamp(130px,18vh,190px)}
+/* Tranziția spre partea de jos: fundalul verde se topește în bejul secțiunii cu categorii. */
+.lb-map.mp-top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:38%;z-index:1;pointer-events:none;
+ background:linear-gradient(180deg,#f1e6d300 0,#f1e6d38c 55%,#f1e6d3 100%)}
+.mp-in{position:relative;z-index:2;max-width:1300px;width:100%;margin:0 auto;
+ transform:translate3d(0,calc(var(--mp,0) * -110px),0);opacity:calc(1 - var(--mp,0) * 1.5);will-change:transform,opacity}
+.mp-in>*{animation:mpUp 1s cubic-bezier(.2,.7,.2,1) backwards}
+.mp-in>:nth-child(2){animation-delay:.1s}.mp-in>:nth-child(3){animation-delay:.22s}.mp-in>:nth-child(4){animation-delay:.34s}
+@keyframes mpUp{from{opacity:0;transform:translateY(30px)}}
+.mp-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#e8d3a6;margin-bottom:22px}
+.mp-eyebrow::before{content:'';width:34px;height:1px;background:currentColor}
+/* Titlul în serif (Fraunces, varianta rotunjită), cu „aproape” în italic. */
+.lb-map.mp-top h2{font-family:'Fraunces',Georgia,serif;font-weight:400;font-variation-settings:'SOFT' 100,'opsz' 144;text-transform:none;
+ font-size:clamp(50px,8.4vw,128px);line-height:.98;letter-spacing:-.03em;max-width:11ch;margin:0 0 22px}
+.lb-map.mp-top h2 em{font-style:italic;color:#e8d3a6}
+.lb-map.mp-top p{max-width:44ch;margin:0 0 34px}
+.mp-cta{display:flex;align-items:center;gap:18px 26px;flex-wrap:wrap}
+.mp-cue{position:absolute;z-index:2;left:50%;bottom:clamp(18px,4vh,34px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;
+ border:0;background:none;color:var(--brown);font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;
+ opacity:calc(1 - var(--mp,0) * 3);transition:color .25s}
+.mp-cue:hover{color:var(--accent)}
+.mp-cue i{position:relative;width:1px;height:46px;background:#4a3a2c33;overflow:hidden}
+.mp-cue i::after{content:'';position:absolute;left:0;top:-50%;width:100%;height:50%;background:var(--accent);animation:ivCue 2.2s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.mp-in{transform:none;opacity:1}.mp-in>*{animation:none}}
 
 /* ===================== Tranziții și animații pentru butoane și meniuri ===================== */
 .btn,.chip,.tab,.close,.cal-nav,.day,.sort-select,.tgl-dd-btn,.menu-btn,.ic-btn{transition:transform .2s cubic-bezier(.2,.7,.2,1),box-shadow .25s,background-color .25s,border-color .25s,color .25s,opacity .25s}
@@ -538,4 +528,4 @@ header .logo{font-size:28px}
 .lb-names button{transition:opacity .2s,transform .3s cubic-bezier(.2,.7,.2,1),color .2s}
 /* Fără animații: dacă utilizatorul le-a oprit din meniu sau cere „reduce motion”. */
 body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!important;transition:none!important}
-@media(prefers-reduced-motion:reduce){.ld-text>*,.ld-card,.modal.show,.modal.show>.modalbox,.tgl-dd-menu,.filters,.chip.active{animation:none}}
+@media(prefers-reduced-motion:reduce){.modal.show,.modal.show>.modalbox,.tgl-dd-menu,.filters,.chip.active{animation:none}}

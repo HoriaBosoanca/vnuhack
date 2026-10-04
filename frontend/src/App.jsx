@@ -9,7 +9,7 @@ import MapPanel from './components/MapPanel'
 import { Avatar, RatingLine, Modal, ToggleDropdown } from './components/ui'
 import Calendar from './components/Calendar'
 import ProfileModal from './components/ProfileModal'
-import { Welcome, Categories, MapPromo, MenuOverlay, setMenu, scrollToEl } from './components/Landing'
+import { Categories, MapPromo, MenuOverlay, setMenu, scrollToEl } from './components/Landing'
 import DetailModal from './components/DetailModal'
 import PublishModal from './components/PublishModal'
 import MessagesModal from './components/MessagesModal'
@@ -167,7 +167,7 @@ function useScrollEffects() {
     if (REDUCE_MOTION || !window.IntersectionObserver) return
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .1 })
     const add = (sel, fade) => document.querySelectorAll(sel).forEach((el, i) => { el.classList.add('sr'); if (fade) el.classList.add('fade'); el.style.setProperty('--d', (i * .1) + 's'); io.observe(el) })
-    add('.lb-col'); add('.lb-map>div'); add('.hero h1,.hero .search,.hero-filters'); add('.toolbar'); add('.mapcol', true); add('footer')
+    add('.lb-col'); add('.hero h1,.hero .search,.hero-filters'); add('.toolbar'); add('.mapcol', true); add('footer')
     const hero = document.querySelector('.hero'), hd = document.querySelector('header'); let tick = false
     const upd = () => {
       tick = false; const y = Math.max(0, scrollY - (hero ? hero.offsetTop - 72 : 0)); hd && hd.classList.toggle('scrolled', scrollY > 8)
@@ -209,9 +209,8 @@ export default function App() {
   return <>
     <Header />
     <MenuOverlay />
-    <Welcome />
-    <Categories />
     <MapPromo />
+    <Categories />
     <Hero />
     <Explore />
     <Footer />
