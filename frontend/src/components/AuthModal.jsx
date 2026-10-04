@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useStore, S, emit, closeM, openTerms, goToFirstInvalid, login, register } from '../lib/store'
+import { useStore, S, emit, closeM, openTerms, goToFirstInvalid, login, register, toast } from '../lib/store'
 import { validEmail, validPhone } from '../lib/utils'
 import { Field, Modal, useErrs } from './ui'
 
@@ -19,21 +19,24 @@ export default function AuthModal() {
     const email = l.email.trim().toLowerCase(), pass = l.pass
     if (!check({ lEmail: email ? '' : 'Scrie adresa de e-mail.', lPass: pass ? '' : 'Scrie parola.' })) return goToFirstInvalid('authModal')
     const err = await login(email, pass)
-    if (err) { check({ lPass: err }); return goToFirstInvalid('authModal') }
+    if (err?.status === 401) { check({ lPass: err.message }); return goToFirstInvalid('authModal') }
+    if (err) return toast(err.message)
     setL(o => ({ ...o, pass: '' }))
   }
   async function doRegister() {
     const name = r.name.trim(), email = r.email.trim().toLowerCase(), phone = r.phone.trim(), pass = r.pass
     const ok = check({
       aName: name.length >= 3 ? '' : 'Introdu numele complet.',
-      aEmail: !validEmail(email) ? 'Adresa de e-mail nu e validă.' : S.users.some(u => u.email === email) ? 'Există deja un cont cu acest e-mail. Apasă „Am deja cont”.' : '',
+      aEmail: !validEmail(email) ? 'Adresa de e-mail nu e validă.' : '',
       aPhone: !phone || validPhone(phone) ? '' : 'Număr invalid. Exemplu: 0722 123 456.',
       aPass: pass.length >= 8 ? '' : 'Parola trebuie să aibă minim 8 caractere.',
       aTerms: r.terms ? '' : 'Trebuie să accepți Termenii și condițiile ca să-ți creezi cont.',
     })
     if (!ok) return goToFirstInvalid('authModal')
+    const err = await register({ name, email, phone, password: pass, terms: r.terms, newsletter: r.news })
+    if (err?.status === 409) { check({ aEmail: err.message }); return goToFirstInvalid('authModal') }
+    if (err) return toast(err.message)
     setR(o => ({ ...o, pass: '' }))
-    await register({ name, email, phone, pass, newsletter: r.news })
   }
 
   return (
