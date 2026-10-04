@@ -26,6 +26,9 @@ export const S = {
     activeConv: null, inThread: false, msgDraft: '', msgNonce: 0,
     filters: defaultFilters(), fltOpen: false, mapHidden: !!local.get('spatiu-ui', {}).mapHidden, mapHiddenInstant: !!local.get('spatiu-ui', {}).mapHidden,
     toast: { msg: '', n: 0 },
+    menuOpen: false,
+    /* Animațiile landing-ului: pornite implicit, oprite dacă utilizatorul le-a oprit sau cere „reduce motion”. */
+    animOn: (() => { try { if (localStorage.getItem('spatiu_anim') === 'off') return false } catch (e) {} return !(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches) })(),
   },
 }
 

@@ -9,6 +9,7 @@ import MapPanel from './components/MapPanel'
 import { Avatar, RatingLine, Modal, ToggleDropdown } from './components/ui'
 import Calendar from './components/Calendar'
 import ProfileModal from './components/ProfileModal'
+import { Intro, Categories, MapPromo, MenuOverlay, setMenu, scrollToEl } from './components/Landing'
 import DetailModal from './components/DetailModal'
 import PublishModal from './components/PublishModal'
 import MessagesModal from './components/MessagesModal'
@@ -22,16 +23,19 @@ import Toast from './components/Toast'
 
 function Header() {
   const s = useStore(), n = unreadCount()
+  const goTop = () => scrollTo({ top: 0, behavior: s.ui.animOn ? 'smooth' : 'auto' })
+  const search = () => { scrollToEl('.hero'); setTimeout(() => document.getElementById('search')?.focus({ preventScroll: true }), s.ui.animOn ? 650 : 50) }
   return (
-    <header>
-      <div className="logo">SPAȚIU<span>.</span></div>
-      <nav>
-        <a onClick={() => { resetFilters(); document.querySelector('.layout').scrollIntoView({ behavior: 'smooth' }) }}>Explorează</a>
-        <a onClick={() => openTerms()}>Termeni și condiții</a>
-        <a className="help-link" onClick={openHelp} title="Contactează echipa SPAȚIU" aria-label="Ai nevoie de ajutor?"><span className="full">Ai nevoie de ajutor?</span><span className="short">Ajutor</span></a>
-      </nav>
+    <header className="over">
+      <button className="menu-btn" type="button" aria-expanded={s.ui.menuOpen} aria-controls="menuOv" aria-label="Deschide meniul" onClick={() => setMenu(true)}>
+        <span className="burger" aria-hidden="true"><i /><i /></span><span className="menu-lbl">Meniu</span>
+      </button>
+      <div className="logo" role="link" tabIndex={0} aria-label="SPAȚIU, înapoi sus" onClick={goTop} onKeyDown={e => { if (e.key === 'Enter') goTop() }}>SPAȚIU<span>.</span></div>
       <div className="header-actions">
-        <button className="btn" onClick={openPublish} aria-label="Publică un spațiu">＋<span className="lbl">Publică un spațiu</span></button>
+        <button className="btn ic-btn" type="button" aria-label="Caută un spațiu" onClick={search}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        </button>
+        <button className="btn" data-pub="" onClick={openPublish} aria-label="Publică un spațiu">＋<span className="lbl">Publică un spațiu</span></button>
         <button className="btn" onClick={() => openMessages()} aria-label="Mesaje">💬<span className="lbl">Mesaje</span>{n > 0 && <span className="msg-count">{n}</span>}</button>
         <button className="btn primary" id="accBtn" onClick={openAccount} aria-label="Contul meu">{s.user ? <Avatar name={s.user.name} cls="xs" /> : '👤'}<span>Cont</span></button>
       </div>
@@ -160,6 +164,14 @@ function HelpModal() {
 
 /* Animații la scroll (ca în HTML): secțiunile apar treptat, fundalul din hero are parallax, header-ul primește umbră. */
 function useScrollEffects() {
+  /* Header-ul e transparent cât timp e deasupra intro-ului. */
+  useEffect(() => {
+    const hd = document.querySelector('header'), intro = document.getElementById('intro'); let tick = false
+    const upd = () => { tick = false; hd.classList.toggle('over', !!intro && scrollY < intro.offsetHeight - 72) }
+    const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
+    addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', upd); upd()
+    return () => { removeEventListener('scroll', onScroll); removeEventListener('resize', upd) }
+  }, [])
   useEffect(() => {
     if (REDUCE_MOTION || !window.IntersectionObserver) return
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .1 })
@@ -167,7 +179,7 @@ function useScrollEffects() {
     add('.hero h1,.hero .search,.hero-filters'); add('.toolbar'); add('.mapcol', true); add('footer')
     const hero = document.querySelector('.hero'), hd = document.querySelector('header'); let tick = false
     const upd = () => {
-      tick = false; const y = scrollY; hd && hd.classList.toggle('scrolled', y > 8)
+      tick = false; const y = Math.max(0, scrollY - (hero ? hero.offsetTop - 72 : 0)); hd && hd.classList.toggle('scrolled', scrollY > 8)
       if (hero && y < hero.offsetHeight + 200) { hero.style.setProperty('--py', (y * .3).toFixed(1) + 'px'); hero.style.setProperty('--ho', Math.max(0, 1 - y / (hero.offsetHeight * .9)).toFixed(2)) }
     }
     const onScroll = () => { if (!tick) { tick = true; requestAnimationFrame(upd) } }
@@ -194,16 +206,21 @@ export default function App() {
   const s = useStore()
   useEffect(() => { loadAll() }, [])
   useScrollEffects()
+  useEffect(() => { document.body.classList.toggle('no-anim', !s.ui.animOn) }, [s.ui.animOn])
   /* Fără scroll pe pagină cât timp e deschisă o fereastră. */
   const open = anyOpen()
   useEffect(() => { document.body.classList.toggle('noscroll', open) }, [open])
   /* Esc închide fereastra de deasupra (sau cardul de pe hartă). */
   useEffect(() => {
-    const onKey = e => { if (e.key !== 'Escape') return; if (!closeTop()) mapApi.escape?.() }
+    const onKey = e => { if (e.key !== 'Escape') return; if (S.ui.menuOpen) return setMenu(false); if (!closeTop()) mapApi.escape?.() }
     document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey)
   }, [])
   return <>
     <Header />
+    <MenuOverlay />
+    <Intro />
+    <Categories />
+    <MapPromo />
     <Hero />
     <Explore />
     <Footer />

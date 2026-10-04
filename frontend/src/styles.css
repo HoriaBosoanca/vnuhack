@@ -270,6 +270,130 @@ header{transition:box-shadow .3s,background .3s}header.scrolled{box-shadow:0 6px
 .pf-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:#fff;transition:transform .2s,box-shadow .2s}.pf-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 .pf-card i{display:block;height:100px;background:#eadfce center/cover}.pf-card div{padding:10px 12px;font-size:13px}.pf-card b{display:block;font-size:14px;margin-bottom:2px}
 
+.intro{position:relative;color:#fff;overflow:hidden;isolation:isolate}
+.iv-media{position:absolute;inset:-6% 0;z-index:0;transform:translate3d(0,var(--ipy,0px),0);will-change:transform}
+.iv-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.3s ease}
+.iv-slide.on{opacity:1}
+.iv-img{position:absolute;inset:0;background:#1b1a18 center/cover no-repeat;transform:scale(1.1);transition:transform 10s cubic-bezier(.2,.6,.2,1)}
+.iv-slide.on .iv-img{transform:scale(1)}
+.intro::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none}
+.iv-in{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:40px;opacity:var(--io,1);transform:translate3d(0,var(--ipt,0px),0)}
+.iv-text{min-width:0;max-width:min(1100px,100%)}
+.iv-text.swap>*{animation:ivUp .95s cubic-bezier(.2,.7,.2,1) backwards}
+.iv-text.swap>:nth-child(2){animation-delay:.07s}.iv-text.swap>:nth-child(3){animation-delay:.16s}
+@keyframes ivUp{from{opacity:0;transform:translateY(28px)}}
+.iv-eyebrow{margin:0 0 12px;font-size:clamp(15px,1.4vw,19px);font-weight:500;max-width:34ch}
+.iv-title{margin:0 0 clamp(20px,3.4vh,34px);text-transform:uppercase;overflow-wrap:anywhere;letter-spacing:-.025em}
+.iv-meta{display:flex;align-items:center;flex-wrap:wrap}
+.iv-cta{background:transparent;font:inherit;font-weight:700;cursor:pointer;transition:background .25s,color .25s,border-color .25s}
+.iv-info{display:flex;flex-direction:column;gap:2px;font-size:14px;color:#fbf5e9d9;padding-left:26px}.iv-info b{font-size:17px;font-weight:700}
+.iv-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
+.iv-list button{position:relative;display:block;border:0;background:none;color:var(--cream,#fff);font:inherit;font-size:14px;font-weight:600;text-align:right;padding:9px 20px 9px 0;cursor:pointer;opacity:.55;transition:opacity .25s}
+.iv-list button:hover,.iv-list button.on{opacity:1}
+.iv-list button::after,.iv-list button::before{content:'';position:absolute;right:0;top:0;width:2px}
+.iv-list button::after{bottom:0}
+.iv-list button::before{height:0;z-index:1}
+.iv-list button.on::before{animation:ivFillY var(--ivdur,6.5s) linear forwards}
+@keyframes ivFillY{to{height:100%}}@keyframes ivFillX{to{width:100%}}
+.iv-cue{position:absolute;z-index:2;left:50%;bottom:0;width:1px;height:44px;overflow:hidden}
+.iv-cue::after{content:'';position:absolute;left:0;top:-50%;width:100%;height:50%;animation:ivCue 2.2s ease-in-out infinite}
+@keyframes ivCue{to{top:100%}}
+header{transition:box-shadow .3s,background-color .35s,border-color .35s}
+header.over{box-shadow:none!important}
+header.over nav a,header.over .help-link{color:#fff}
+header.over .btn{background:#fbf5e91a;border-color:#fbf5e966;color:var(--cream);backdrop-filter:blur(6px)}
+header.over .btn.primary{background:var(--cream);border-color:var(--cream);color:var(--ink)}
+@media(prefers-reduced-motion:reduce){.iv-img,.iv-slide.on .iv-img{transform:none;transition:none}.iv-slide{transition:none}.iv-text.swap>*{animation:none}.iv-list button.on::before{animation:none;height:100%;width:100%}.iv-cue::after{animation:none}.iv-media,.iv-in{transform:none!important}}
+
+/* ===== Stil Lamborghini · temă SPAȚIU ===== */
+:root{--night:#17130f;--cream:#fbf5e9;--deep:#22372a}
+header{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;padding:0 clamp(16px,3vw,40px)}
+header .logo{justify-self:center;cursor:pointer;font-size:32px}
+header .header-actions{margin-left:0;justify-self:end}
+.menu-btn{justify-self:start;display:inline-flex;align-items:center;gap:14px;border:0;background:none;color:var(--ink);font:inherit;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;padding:10px 4px;transition:color .3s}
+.burger{display:inline-flex;flex-direction:column;gap:6px;width:26px}.burger i{display:block;height:2px;background:currentColor;transition:transform .3s,width .3s}.burger i:last-child{width:70%}
+.menu-btn:hover .burger i:last-child{width:100%}
+.ic-btn{padding:9px 11px}.ic-btn svg{display:block}
+.intro{--ink-o:var(--night)}
+header.over{background-color:transparent;border-bottom-color:transparent}
+header.over .menu-btn,header.over .logo{color:var(--cream)}
+header.over .logo span{color:var(--brass)}
+/* intro */
+.intro{margin-top:-72px;height:100vh;height:100svh;min-height:580px;background:var(--night);color:var(--cream)}
+.iv-img{filter:saturate(.92) sepia(.1)}
+.intro::after{background:linear-gradient(180deg,#17130fd9 0,#17130f00 26%,#17130f00 40%,#17130ff2 100%),linear-gradient(90deg,#17130f80 0,#17130f00 60%)}
+.iv-in{padding:0 clamp(20px,4vw,56px) clamp(56px,9vh,96px)}
+.iv-eyebrow{color:var(--cream);opacity:.9}
+.iv-title{font-family:'Urbanist',system-ui,sans-serif;font-weight:800;color:var(--cream);font-size:clamp(44px,min(9.5vw,17vh),156px);line-height:.88}
+.iv-meta{gap:22px 30px}
+.iv-cta{border:1px solid var(--cream);color:var(--cream);padding:16px 30px;border-radius:0;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px}
+.iv-cta:hover{background:var(--brass);border-color:var(--brass);color:var(--night)}
+.iv-link{border:0;background:none;color:var(--cream);font:inherit;font-weight:700;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;padding:6px 0;display:inline-flex;align-items:center;gap:12px;border-bottom:1px solid #fbf5e980;transition:border-color .25s,color .25s}
+.iv-link:hover{border-color:var(--brass);color:var(--brass)}
+.iv-info{border-left:1px solid #fbf5e959}.iv-info b{color:var(--cream)}
+.iv-list button.on::before{background:var(--brass)}
+.iv-list button::after{background:#fbf5e940}
+.iv-cue{background:#fbf5e940}.iv-cue::after{background:var(--brass)}
+.iv-count{position:absolute;z-index:2;left:clamp(20px,4vw,56px);top:calc(72px + clamp(18px,4vh,40px));font-size:13px;font-weight:600;letter-spacing:.12em;color:#fbf5e9b3;display:flex;gap:14px;align-items:center}
+.iv-count::after{content:'';width:46px;height:1px;background:#fbf5e966}
+.iv-count b{color:var(--cream);font-weight:700}
+/* categorii (ca lista de modele) */
+.lb-cats{background:var(--night);color:var(--cream);padding:clamp(56px,10vh,110px) clamp(20px,4vw,56px)}
+.lb-grid{display:grid;grid-template-columns:repeat(4,1fr);max-width:1500px;margin:0 auto}
+.lb-col{padding:0 clamp(16px,2.4vw,36px);border-left:1px solid #fbf5e91f;display:flex;flex-direction:column;min-height:300px}
+.lb-col:first-child{border-left:0;padding-left:0}
+.lb-col h3{margin:0 0 6px;font-size:clamp(20px,2vw,28px);font-weight:800;letter-spacing:-.01em}
+.lb-col p{margin:0 0 26px;color:var(--brass);font-size:14px;font-weight:600;max-width:24ch}
+.lb-names{list-style:none;margin:0 0 28px;padding:0;display:flex;flex-direction:column;gap:2px}
+.lb-names button{border:0;background:none;color:var(--cream);font:inherit;font-size:clamp(16px,1.35vw,19px);font-weight:500;text-align:left;padding:6px 0;cursor:pointer;opacity:.78;transition:opacity .2s,transform .25s,color .2s}
+.lb-names button:hover{opacity:1;color:var(--brass);transform:translateX(6px)}
+.lb-more{margin-top:auto;align-self:flex-start}
+/* hartă (ca „dealer locator") */
+.lb-map{position:relative;min-height:62vh;display:flex;align-items:center;color:var(--cream);padding:90px clamp(20px,4vw,56px);background:linear-gradient(90deg,#22372af2 0,#22372ab8 55%,#22372a80 100%),url(https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=2000&q=75) center/cover no-repeat,var(--deep)}
+.lb-map h2{margin:0 0 14px;font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(36px,6.4vw,96px);line-height:.92;max-width:11ch}
+.lb-map p{margin:0 0 34px;font-size:clamp(15px,1.4vw,18px);max-width:42ch;color:#fbf5e9e0}
+/* meniu */
+.menu-ov{position:fixed;inset:0;z-index:1500;background:var(--night);color:var(--cream);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s .45s;overflow-y:auto}
+.menu-ov.open{opacity:1;visibility:visible;transition:opacity .45s ease}
+.mo-top{height:72px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 clamp(16px,3vw,40px)}
+.mo-top .menu-btn{color:var(--cream)}.mo-top .logo{color:var(--cream)}
+.x{position:relative;width:26px;height:18px}.x::before,.x::after{content:'';position:absolute;left:0;top:8px;width:100%;height:2px;background:currentColor;transform:rotate(45deg)}.x::after{transform:rotate(-45deg)}
+.mo-body{flex:1;display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(30px,6vw,110px);padding:clamp(24px,6vh,70px) clamp(20px,5vw,72px) 36px;align-content:center;max-width:1500px;width:100%;margin:0 auto}
+.mo-main{display:flex;flex-direction:column;gap:clamp(2px,1vh,10px)}
+.mo-main button{border:0;background:none;color:var(--cream);font:inherit;font-weight:800;font-size:clamp(32px,5.4vw,72px);line-height:1.04;letter-spacing:-.02em;text-align:left;padding:2px 0;cursor:pointer;display:flex;align-items:center;gap:14px;transition:color .25s,transform .35s cubic-bezier(.2,.7,.2,1)}
+.mo-main button:hover{color:var(--brass);transform:translateX(14px)}
+.mo-main .msg-count{font-size:14px;transform:translateY(-8px)}
+.mo-side h4{margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.mo-side ul{list-style:none;margin:0 0 38px;padding:0;display:flex;flex-direction:column;gap:2px}
+.mo-side button{border:0;background:none;color:var(--cream);font:inherit;font-size:clamp(18px,1.7vw,24px);font-weight:600;padding:6px 0;cursor:pointer;opacity:.82;text-align:left;transition:opacity .2s,color .2s}
+.mo-side button:hover{opacity:1;color:var(--brass)}
+.mo-side .small button{font-size:15px;font-weight:500}
+.mo-in{opacity:0;transform:translateY(24px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--k,0)*.06s + .12s)}
+.menu-ov.open .mo-in{opacity:1;transform:none}
+.mo-foot{padding:18px clamp(20px,5vw,72px) 26px;border-top:1px solid #fbf5e91f;font-size:13px;color:#fbf5e999;display:flex;gap:14px 30px;flex-wrap:wrap;justify-content:space-between}
+body.menu-lock{overflow:hidden}
+.hero{padding-top:136px}
+@media(max-width:900px){
+ .iv-in{flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:28px}
+ .iv-list{flex-direction:row;align-items:flex-start;gap:6px;width:100%}.iv-list li{flex:1}
+ .iv-list button{width:100%;font-size:0;padding:12px 0 0;text-align:left;opacity:1}
+ .iv-list button::after,.iv-list button::before{left:0;right:auto;top:0;height:2px;width:100%}
+ .iv-list button::before{width:0}.iv-list button.on::before{animation-name:ivFillX}
+ .iv-cue{display:none}
+ .lb-grid{grid-template-columns:1fr 1fr;row-gap:44px}.lb-col:nth-child(3){border-left:0;padding-left:0}
+ .mo-body{grid-template-columns:1fr;align-content:start}
+}
+@media(max-width:600px){
+ .hero{padding-top:106px}
+ header{grid-template-columns:auto 1fr auto;gap:8px}header .logo{font-size:26px}.menu-lbl{display:none}
+ .header-actions [data-pub]{display:none}
+ .iv-info{padding-left:18px}.iv-cta{padding:14px 20px}.iv-count{display:none}
+ .lb-grid{grid-template-columns:1fr}.lb-col{border-left:0;padding:0;min-height:0}
+ .lb-map{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.menu-ov,.mo-in{transition:none}.mo-in{opacity:1;transform:none}}
+body.no-anim .iv-img{transform:none!important;transition:none}
+
 /* Termenii stau deasupra tuturor ferestrelor (inclusiv a avertismentului de publicare). */
 #termsModal{z-index:3001}
 
