@@ -6,12 +6,12 @@ Rulare:
     uvicorn main:app --reload
 
 Endpoint-uri (toate sub /api; cele marcate cu * cer „Authorization: Bearer <token>”):
-    POST /api/auth/register, /api/auth/login, /api/auth/logout    GET /api/auth/me *
+    POST /api/auth/register, /api/auth/login, /api/auth/logout    GET /api/auth/me *    GET /api/utilizatori/{id}
     GET  /api/anunturi    POST /api/anunturi *    DELETE /api/anunturi/{id} *
     GET  /api/poze/{id}   GET /api/anunturi/{id}/contract
     GET  /api/rezervari * POST /api/rezervari *   POST /api/rezervari/{id}/anuleaza *
     GET  /api/recenzii    POST /api/recenzii *
-    GET  /api/conversatii *   POST /api/conversatii *   POST /api/conversatii/suport *
+    GET  /api/conversatii *   POST /api/conversatii *   POST /api/conversatii/suport *   POST /api/conversatii/direct *
     POST /api/conversatii/{id}/mesaje *   POST /api/conversatii/{id}/citit *
 """
 
@@ -81,6 +81,7 @@ async def erori_neprevazute(request: Request, call_next):
 
 app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
 app.include_router(auth.router)
+app.include_router(auth.profil_router)
 app.include_router(anunturi.router)
 app.include_router(rezervari.router)
 app.include_router(mesaje.router)

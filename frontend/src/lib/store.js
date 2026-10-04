@@ -1,14 +1,14 @@
 import { useSyncExternalStore } from 'react'
 import { api, absUrl, hasToken, setToken } from './api'
 import { ticketHTML } from './ticket'
-import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, noiseLevel, accessWindow, toMin, downloadBlob, normalizeText } from './utils'
+import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, accessWindow, toMin, downloadBlob, normalizeText } from './utils'
 
 /* ================== STARE GLOBALĂ ==================
    Un singur „store” mutabil; componentele se abonează cu useStore() și se re-randează la emit().
    Datele (anunțuri, conturi, rezervări, recenzii, mesaje) vin de la backend-ul Python. */
-export const MODALS = ['detail', 'publish', 'msg', 'account', 'auth', 'book', 'ticket', 'review', 'risk', 'terms'] // ordinea = ordinea de suprapunere
+export const MODALS = ['help', 'detail', 'publish', 'profile', 'msg', 'account', 'auth', 'book', 'ticket', 'review', 'risk', 'terms'] // ordinea = ordinea de suprapunere
 
-export const defaultFilters = () => ({ q: '', type: 'all', duration: 'all', county: '', min: '', max: '', noise: '0', access: 'any', from: '18:00', to: '23:00', rules: [], sort: 'default' })
+export const defaultFilters = () => ({ q: '', type: 'all', duration: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'default' })
 
 /* Preferințe locale (doar în acest browser): favorite și harta ascunsă. */
 const local = {
@@ -21,7 +21,7 @@ export const S = {
   user: null, conversations: [], loaded: false,
   ui: {
     open: Object.fromEntries(MODALS.map(m => [m, false])),
-    detailId: null, detailNonce: 0, ticketId: null, review: null, book: null,
+    detailId: null, detailNonce: 0, profile: null, ticketId: null, review: null, book: null,
     authReason: '', authTab: 'reg', pending: null, termsAccept: null,
     activeConv: null, inThread: false, msgDraft: '', msgNonce: 0,
     filters: defaultFilters(), fltOpen: false, mapHidden: !!local.get('spatiu-ui', {}).mapHidden, mapHiddenInstant: !!local.get('spatiu-ui', {}).mapHidden,
@@ -176,10 +176,12 @@ function passFilters(x, f) {
   if (f.county && x.county !== f.county) return false
   if (f.min !== '' && x.price < +f.min) return false
   if (f.max !== '' && x.price > +f.max) return false
-  if (+f.noise && noiseLevel(x) < +f.noise) return false
   if (f.access === '24/7' && x.access !== '24/7') return false
   if (f.access === 'range' && x.access !== '24/7') { const w = accessWindow(x); if (!w) return false; let a = toMin(f.from), b = toMin(f.to); if (b <= a) b += 1440; if (a < w[0]) { a += 1440; b += 1440 } if (a < w[0] || b > w[1]) return false }
-  const keys = (x.rules || []).map(ruleKey); for (const k of f.rules) if (!keys.includes(k)) return false
+  /* Disponibilitate: spațiul trebuie să fie liber în toate zilele alese (cele din trecut se ignoră). */
+  if (f.days.size) { const tk = todayKey(); for (const k of f.days) if (k >= tk && !x.avail.has(k)) return false }
+  /* Reguli: o regulă bifată ascunde spațiile unde se aplică (ex. „Fumatul interzis” → spații unde se poate fuma). */
+  const keys = (x.rules || []).map(ruleKey); for (const k of f.rules) if (keys.includes(k)) return false
   return true
 }
 export function filteredListings() {
@@ -196,7 +198,7 @@ export function filteredListings() {
   else if (f.sort === 'ratingAsc') data.sort((a, b) => rt(a) - rt(b) || nr(a) - nr(b) || a.price - b.price)
   return data
 }
-export function activeFilterCount() { const f = S.ui.filters; return [f.county, f.min || f.max, f.noise !== '0', f.access !== 'any'].filter(Boolean).length + f.rules.length }
+export function activeFilterCount() { const f = S.ui.filters; return [f.type !== 'all', f.duration !== 'all', f.county, f.min || f.max, f.access !== 'any'].filter(Boolean).length + f.rules.length + (f.days.size ? 1 : 0) }
 
 /* ================== ANUNȚURI ================== */
 export function openDetail(id) {
@@ -253,13 +255,34 @@ export function selectConv(id) {
 export function backToList() { S.ui.inThread = false; emit() }
 export function setDraft(t) { S.ui.msgDraft = t; emit() }
 function upsertConv(c) { const i = S.conversations.findIndex(z => z.id === c.id); i >= 0 ? S.conversations.splice(i, 1, c) : S.conversations.unshift(c) }
-/* „Ai nevoie de ajutor?” → conversația cu Echipa SPAȚIU. */
+/* „Ai nevoie de ajutor?” → pop-up „Nu ezita să ne contactezi” → conversația cu Echipa SPAȚIU. */
+export function openHelp() { openM('help') }
 export function openSupport() {
   requireAuth(async () => {
     let c
     try { c = await api('/api/conversatii/suport', { method: 'POST' }) } catch (e) { return fail(e) }
     upsertConv(c); S.ui.open.msg = true; selectConv(c.id)
   }, 'Ca să scrii echipei SPAȚIU ai nevoie de un cont.')
+}
+/* ================== PROFIL PUBLIC ================== */
+/* Profilul unui utilizator (proprietar sau autor de recenzie). Anunțurile și recenziile vin din listele deja încărcate. */
+export async function openProfile(userId) {
+  if (userId == null) return
+  S.ui.profile = { id: userId, name: '', since: '', loading: true }; openM('profile')
+  try { S.ui.profile = await api(`/api/utilizatori/${userId}`) } catch (e) { S.ui.open.profile = false; fail(e) }
+  emit()
+}
+/* „Trimite mesaj” din profil: conversație directă între doi utilizatori, fără anunț. */
+export function messageProfile(userId) {
+  if (S.user && S.user.id === userId) return toast('Acesta este profilul tău.')
+  requireAuth(async () => {
+    if (S.user.id === userId) return toast('Acesta este profilul tău.')
+    let c
+    try { c = await api('/api/conversatii/direct', { method: 'POST', body: { userId } }) } catch (e) { return fail(e) }
+    upsertConv(c); S.ui.open.profile = false; S.ui.open.detail = false; S.ui.open.msg = true
+    if (!c.messages.length && !S.ui.msgDraft) S.ui.msgDraft = `Bună ziua, ${c.with.split(' ')[0]}! `
+    selectConv(c.id)
+  }, 'Ca să trimiți un mesaj ai nevoie de un cont.')
 }
 export function startChat(listingId) {
   const x = byId(listingId)
@@ -317,7 +340,7 @@ export async function cancelBooking(id) {
 /* ================== BILET ================== */
 export function openTicket(id) { S.ui.ticketId = id; openM('ticket') }
 export function downloadTicket(id) {
-  const b = findBooking(id), html = `<!doctype html><html lang="ro"><head><meta charset="utf-8"><title>Bilet ${b.code}</title></head><body style="margin:0;padding:24px;background:#f6f7f9">${ticketHTML(b)}</body></html>`
+  const b = findBooking(id), html = `<!doctype html><html lang="ro"><head><meta charset="utf-8"><title>Bilet ${b.code}</title></head><body style="margin:0;padding:24px;background:#f8f3ea">${ticketHTML(b)}</body></html>`
   downloadBlob(new Blob([html], { type: 'text/html' }), `bilet-${b.code}.html`)
 }
 export function printTicket() { document.body.classList.add('print-ticket'); window.print() }

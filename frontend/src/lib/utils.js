@@ -40,7 +40,7 @@ export const fmtSize = b => b < 1024 * 1024 ? Math.round(b / 1024) + ' KB' : (b 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 export const initials = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase()
 export const shortName = n => { const p = n.trim().split(/\s+/); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] }
-export function colorFor(s) { const p = ['#2f5d50', '#8a5a44', '#5b6b8c', '#9a6a26', '#6b4e71', '#3f7a7a', '#a1584a']; let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return p[h % p.length] }
+export function colorFor(s) { const p = ['#3f6a4e', '#8a5a44', '#5b6b8c', '#9a6a26', '#6b4e71', '#3f7a7a', '#a1584a']; let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return p[h % p.length] }
 export const thumb = u => u && u.includes('images.unsplash.com') ? u.replace('w=800', 'w=200') : u
 export const fullAddress = x => x.address ? `${x.address}, ${x.location}` : x.location
 export const validPhone = p => /^(\+40|0040|0)[237]\d{8}$/.test(p.replace(/[\s.\-()]/g, ''))
@@ -55,7 +55,6 @@ export const feeOf = n => Math.round(n * FEE_RATE * 100) / 100
 export const label = t => ({ storage: '📦 Depozitare', event: '🎉 Evenimente', work: '💻 Lucru', leisure: '🌿 Relaxare' }[t])
 export const locText = (city, county) => county === 'București' ? `${city}, București` : `${city}, jud. ${county}`
 export const ruleKey = r => String(r).replace(/^[^\p{L}\p{N}]+/u, '').trim().toLowerCase()
-export const noiseLevel = x => /fără/i.test(x.noise || '') ? 999 : +((x.noise || '').match(/\d+/) || [0])[0]
 export const avgOf = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0
 export const sleep = ms => new Promise(r => setTimeout(r, ms))
 export const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`

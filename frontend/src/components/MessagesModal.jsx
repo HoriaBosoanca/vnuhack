@@ -39,7 +39,7 @@ export default function MessagesModal() {
         {c && <div className="chat-head">
           <button className="close m-only" onClick={backToList} aria-label="Înapoi">‹</button>
           <Avatar name={c.with} />
-          <div style={{ minWidth: 0 }}><b>{c.with}</b><div className="hint">{x ? 'Proprietar' : c.listingId ? 'Anunț retras' : 'Suport'}</div></div>
+          <div style={{ minWidth: 0 }}><b>{c.with}</b><div className="hint">{x ? 'Proprietar' : c.listingId ? 'Anunț retras' : c.direct ? 'Utilizator SPAȚIU' : 'Suport'}</div></div>
           {x && <div className="chat-listing" onClick={() => { closeM('msg'); openDetail(x.id) }}><i style={{ backgroundImage: `url('${thumb(x.img)}')` }} /><span><b>{x.title}</b><br />{fmtPrice(x.price)} lei / {x.unit}</span></div>}
           <button className="close m-only" onClick={() => closeM('msg')} aria-label="Închide" style={x ? undefined : { marginLeft: 'auto' }}>×</button>
         </div>}

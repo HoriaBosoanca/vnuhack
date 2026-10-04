@@ -118,7 +118,7 @@ export default function MapPanel({ data }) {
               <h4>{x.title}</h4><div className="location">📍 {x.location}</div>
               <div className="mc-price">{fmtPrice(x.price)} lei <span>/ {x.unit}</span></div>
               <RatingLine r={listingRating(x)} />
-              <div className="mc-facts"><span>📐 {x.area} m²</span><span>🔑 {x.access}</span><span>🔊 {x.noise}</span></div>
+              <div className="mc-facts"><span>📐 {x.area} m²</span><span>🔑 {x.access}</span></div>
               <div className="mc-safety"><SafetyTags x={x} /></div>
               <div className="mc-actions"><button className="btn primary sm" onClick={() => openDetail(x.id)}>Vezi detalii</button><ContactBtn x={x} /></div>
             </div>

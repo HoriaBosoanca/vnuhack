@@ -155,7 +155,7 @@ class RecenzieNoua(BaseModel):
 
 def review_json(r) -> dict:
     return {"id": r["id"], "type": r["type"], "bookingId": r["booking_id"], "listingId": r["listing_id"], "ownerKey": r["owner_key"],
-            "guestId": r["guest_id"], "guestName": r["guest_name"], "authorName": r["author_name"], "stars": r["stars"],
+            "guestId": r["guest_id"], "guestName": r["guest_name"], "authorId": r["author_id"], "authorName": r["author_name"], "stars": r["stars"],
             "hostStars": r["host_stars"], "comment": r["comment"], "createdAt": iso(r["created_at"])}
 
 
