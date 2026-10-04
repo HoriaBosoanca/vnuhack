@@ -29,10 +29,20 @@ import mesaje
 import rezervari
 from schema import init_db
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://neondb_owner:npg_DaHNVl7CXOc8@ep-aged-pine-b17368dl-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-)
+def load_env_file(path=os.path.join(os.path.dirname(__file__), ".env")):
+    """Citește backend-py/.env (KEY=valoare pe fiecare linie), dacă există. Variabilele deja setate au prioritate."""
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            key, sep, value = line.strip().partition("=")
+            if sep and key and not key.startswith("#"):
+                os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
+load_env_file()
+# Link-ul la baza de date vine doar din mediu: pe Render din „Environment”, local din backend-py/.env.
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 PORT = int(os.environ.get("PORT", "8000"))
 # Site-urile care pot apela API-ul, separate prin virgulă (ex. https://spatiu.onrender.com). Implicit: oricare.
 CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
@@ -41,7 +51,7 @@ CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(","
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not DATABASE_URL:
-        raise RuntimeError("Setează variabila de mediu DATABASE_URL")
+        raise RuntimeError("Lipsește DATABASE_URL: setează variabila de mediu (pe Render: Environment) sau pune-o în backend-py/.env")
     # prepare_threshold=None: fără prepared statements pe server, ca să meargă prin pooler-ul Neon (PgBouncer).
     pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=5, open=False, kwargs={"prepare_threshold": None})
     await pool.open()
