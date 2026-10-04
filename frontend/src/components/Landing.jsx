@@ -9,7 +9,7 @@ const TYPES = [
   ['event', 'Evenimente', 'Petreceri, nunți, aniversări'],
   ['storage', 'Depozitare', 'Garaje, boxe și depozite'],
   ['work', 'Lucru', 'Studiouri și birouri pe ore'],
-  ['leisure', 'Timp liber', 'Curți și locuri de joacă'],
+  ['leisure', 'Relaxare', 'Curți și locuri de joacă'],
 ]
 const TAGLINE = Object.fromEntries(TYPES.map(([t, , p]) => [t, p]))
 

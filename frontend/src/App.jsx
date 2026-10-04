@@ -33,7 +33,7 @@ function Header() {
       <div className="logo" role="link" tabIndex={0} aria-label="SPAȚIU, înapoi sus" onClick={goTop} onKeyDown={e => { if (e.key === 'Enter') goTop() }}>SPAȚIU<span>.</span></div>
       <div className="header-actions">
         <button className="btn ic-btn" type="button" aria-label="Caută un spațiu" onClick={search}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><span className="lbl">Caută un spațiu</span>
         </button>
         <button className="btn" data-pub="" onClick={openPublish} aria-label="Publică un spațiu">＋<span className="lbl">Publică un spațiu</span></button>
         <button className="btn" onClick={() => openMessages()} aria-label="Mesaje">💬<span className="lbl">Mesaje</span>{n > 0 && <span className="msg-count">{n}</span>}</button>
@@ -68,7 +68,7 @@ function Filters() {
       <div className="fgrid">
         <div className="field"><label htmlFor="type">Tip spațiu</label>
           <select id="type" value={f.type} onChange={e => setFilter({ type: e.target.value })}>
-            <option value="all">Orice tip</option><option value="event">Evenimente</option><option value="storage">Depozitare</option><option value="work">Lucru</option><option value="leisure">Timp liber</option>
+            <option value="all">Orice tip</option><option value="event">Evenimente</option><option value="storage">Depozitare</option><option value="work">Lucru</option><option value="leisure">Relaxare</option>
           </select></div>
         <div className="field"><label htmlFor="fltCounty">Județ</label>
           <select id="fltCounty" value={f.county} onChange={e => setFilter({ county: e.target.value })}><option value="">Toate județele</option>{COUNTY_NAMES.map(c => <option key={c}>{c}</option>)}</select></div>

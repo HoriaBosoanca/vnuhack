@@ -3,13 +3,13 @@ import { createPortal } from 'react-dom'
 import L from 'leaflet'
 import { useStore, S, closeM, openM, openTerms, toast, goToFirstInvalid, publishListing } from '../lib/store'
 import { blobToDataURL } from '../lib/api'
-import { TILES, geocode } from '../lib/geo'
+import { TILES, geocode, reverseGeocode } from '../lib/geo'
 import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtSize, fmtLei, feeOf, validPhone, shrinkImage } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs, ToggleDropdown } from './ui'
 import Calendar from './Calendar'
 
 const MAX_PHOTOS = 10, MAX_MB = 10
-const GEO_HINT = 'Completează județul, localitatea și adresa. Pinul se pune singur; îl poți trage pe locul exact.'
+const GEO_HINT = 'Completează județul, localitatea și adresa și pinul se pune singur. Sau dă click pe hartă: adresa se completează automat.'
 const empty = () => ({
   title: '', type: 'storage', price: '', area: '', unit: 'lună', county: '', city: '', address: '', phone: '',
   access: 'custom', from: '08:00', to: '22:00', desc: '', isu: false, ext: false, evac: false, smoke: false, isuNo: '', declare: false,
@@ -65,15 +65,26 @@ export default function PublishModal() {
 
   /* ---- Harta din formular ---- */
   function ensurePubMap() {
-    if (!pubMap.current) { pubMap.current = L.map(mapEl.current, { scrollWheelZoom: false }).setView([45.9, 24.9], 6); L.tileLayer(TILES.url, TILES.opts).addTo(pubMap.current) }
+    if (!pubMap.current) { pubMap.current = L.map(mapEl.current).setView([45.9, 24.9], 6); L.tileLayer(TILES.url, TILES.opts).addTo(pubMap.current) }
+    if (!pubMap.current._pick) { pubMap.current._pick = true; pubMap.current.on('click', e => pickPoint(e.latlng.lat, e.latlng.lng)) }
     setTimeout(() => pubMap.current.invalidateSize(), 80)
   }
   function setPubPin(lat, lng, zoom) {
     if (!pubPin.current) {
       pubPin.current = L.marker([lat, lng], { draggable: true, icon: L.divIcon({ className: '', html: '<div class="geo-pin"></div>', iconSize: [22, 22], iconAnchor: [11, 22] }) }).addTo(pubMap.current)
-        .on('dragend', () => { const ll = pubPin.current.getLatLng(); pubGeo.current = { lat: ll.lat, lng: ll.lng, approx: false, manual: true }; setGeoInfo('✓ Ai poziționat pinul manual. Așa apare anunțul pe hărți.') })
+        .on('dragend', () => { const ll = pubPin.current.getLatLng(); pickPoint(ll.lat, ll.lng) })
     } else pubPin.current.setLatLng([lat, lng])
-    pubMap.current.setView([lat, lng], zoom)
+    if (zoom != null) pubMap.current.setView([lat, lng], zoom)
+  }
+  /* Click pe hartă (sau pin tras): pune pinul acolo și completează automat județul, localitatea și adresa. */
+  async function pickPoint(lat, lng) {
+    pubGeo.current = { lat, lng, approx: false, manual: true }; setPubPin(lat, lng, null)
+    const seq = ++geoSeq.current; setGeoInfo('Caut adresa locului ales…')
+    const r = await reverseGeocode(lat, lng, COUNTY_NAMES); if (seq !== geoSeq.current) return
+    if (!r || !r.address) { setGeoInfo('✓ Am pus pinul aici. Nu am găsit adresa exactă, completeaz-o tu mai sus.'); return }
+    setF(o => ({ ...o, address: r.address, city: r.city || o.city, county: r.county || o.county }))
+    ;['address', 'city', 'county'].forEach(clear)
+    setGeoInfo('✓ Am completat adresa după locul ales pe hartă. Verific-o și corecteaz-o dacă e nevoie.')
   }
   async function geocodeForm(manual) {
     const { county, city, address } = fRef.current
@@ -89,7 +100,8 @@ export default function PublishModal() {
     }
     return pubGeo.current
   }
-  const placeChanged = () => { if (pubGeo.current && pubGeo.current.manual) return; pubGeo.current = null; setTimeout(() => geocodeForm(false), 0) }
+  /* Când utilizatorul schimbă județul, localitatea sau adresa, pinul se mută automat (chiar dacă îl pusese din hartă). */
+  const placeChanged = () => { pubGeo.current = null; setTimeout(() => geocodeForm(false), 0) }
   const onBlurPlace = () => { if (dirty.current) { dirty.current = false; placeChanged() } }
 
   /* ---- Poze ---- */
@@ -165,7 +177,7 @@ export default function PublishModal() {
       <div className="modalhead"><div><h2>Publică un spațiu</h2><div className="hint">Transformă un spațiu nefolosit într-o sursă de venit.</div></div><CloseBtn name="publish" /></div>
       <div className="formgrid">
         <Field full err={errs.title}><label htmlFor="fTitle">Titlu anunț *</label><input id="fTitle" ref={titleRef} value={f.title} onChange={set('title', 'title')} placeholder="ex. Garaj uscat pentru depozitare" /></Field>
-        <div className="field"><label htmlFor="fType">Tip</label><select id="fType" value={f.type} onChange={set('type')}><option value="storage">Depozitare</option><option value="event">Evenimente</option><option value="work">Lucru</option><option value="leisure">Timp liber</option></select></div>
+        <div className="field"><label htmlFor="fType">Tip</label><select id="fType" value={f.type} onChange={set('type')}><option value="storage">Depozitare</option><option value="event">Evenimente</option><option value="work">Lucru</option><option value="leisure">Relaxare</option></select></div>
         <Field err={errs.price}><label htmlFor="fPrice">Preț *</label><input id="fPrice" type="number" min="1" placeholder="ex. 150" value={f.price} onChange={set('price', 'price')} /><span className="hint">lei / unitatea aleasă</span>
           <span className="hint">{+f.price > 0 ? `Taxă SPAȚIU: ${fmtLei(feeOf(+f.price))} (5%, TVA inclus) pentru fiecare unitate rezervată.` : 'Taxa SPAȚIU: 5% din preț, cu TVA inclus.'}</span></Field>
         <Field err={errs.area}><label htmlFor="fArea">Suprafață (m²) *</label><input id="fArea" type="number" min="1" placeholder="ex. 30" value={f.area} onChange={set('area', 'area')} /></Field>
@@ -175,7 +187,7 @@ export default function PublishModal() {
         <Field err={errs.city}><label htmlFor="fCity">Oraș / localitate *</label><input id="fCity" value={f.city} onChange={e => { set('city', 'city')(e); dirty.current = true }} onBlur={onBlurPlace} placeholder={f.county === 'București' ? 'ex. Sector 3' : 'ex. Florești'} /></Field>
         <Field full err={errs.address}><label htmlFor="fAddress">Adresă (stradă, număr, bloc) *</label><input id="fAddress" autoComplete="street-address" value={f.address} onChange={e => { set('address', 'address')(e); dirty.current = true }} onBlur={onBlurPlace} placeholder="ex. Str. Avram Iancu nr. 12, bl. A, ap. 3" /><span className="hint">Apare în pagina anunțului și pe biletul de rezervare.</span></Field>
         <div className="field full"><label>Locația pe hartă</label><div className="pub-map" ref={mapEl} />
-          <div className="geo-row"><span className="hint">{geoInfo}</span><button type="button" className="btn sm" onClick={() => geocodeForm(true)}>📍 Găsește adresa pe hartă</button></div></div>
+          <div className="geo-row"><span className="hint">{geoInfo}</span></div></div>
         <Field err={errs.phone}><label htmlFor="fPhone">Telefon de contact *</label><input id="fPhone" type="tel" autoComplete="tel" placeholder="ex. 0722 123 456" value={f.phone} onChange={set('phone', 'phone')} /><span className="hint">Apare în pagina anunțului</span></Field>
         <Field full err={errs.access}><label htmlFor="fAccess">Program de acces</label>
           <select id="fAccess" value={f.access} onChange={e => { set('access')(e); if (e.target.value !== 'custom') clear('access') }}><option value="custom">Interval orar (alegi tu orele)</option><option value="24/7">Non-stop (24/7)</option><option value="owner">Doar cu proprietarul</option></select>

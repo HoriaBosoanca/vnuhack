@@ -37,3 +37,21 @@ export async function geocode({ address, city, county }) {
   const c = await photon(county === 'București' ? 'București, România' : `${city}, ${county}, România`)
   return c === undefined ? undefined : c ? { ...c, approx: true } : null
 }
+
+/* Geocodare inversă (punct pe hartă → adresă), tot prin Photon. Întoarce { address, city, county } sau null. */
+export async function reverseGeocode(lat, lng, counties) {
+  let p
+  try {
+    const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&limit=1`); if (!r.ok) return null
+    p = (await r.json()).features?.[0]?.properties; if (!p) return null
+  } catch (e) { return null }
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^(judetul|municipiul)\s+/, '').trim()
+  const findCounty = (...names) => { for (const n of names) { const k = counties.find(c => norm(c) === norm(n)); if (k) return k } return '' }
+  const county = findCounty(p.state, p.county, p.city)
+  /* În București localitatea din formular e sectorul. */
+  const sector = [p.district, p.city, p.county].find(v => /sector/i.test(v || ''))
+  const city = county === 'București' ? (sector ? sector.replace(/^sectorul/i, 'Sector') : 'București') : (p.city || p.town || p.village || p.district || p.county || '')
+  const street = p.street || (p.type === 'street' ? p.name : '')
+  const address = street ? `${street}${p.housenumber ? ' nr. ' + p.housenumber : ''}` : (p.name || '')
+  return { address, city, county }
+}

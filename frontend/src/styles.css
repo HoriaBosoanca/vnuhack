@@ -552,3 +552,12 @@ header .logo{font-size:28px}
 /* Fără animații: dacă utilizatorul le-a oprit din meniu sau cere „reduce motion”. */
 body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){.modal.show,.modal.show>.modalbox,.tgl-dd-menu,.filters,.chip.active{animation:none}}
+
+/* ===================== Header mai transparent ===================== */
+header{background:#fbf5e9a6;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-bottom-color:#4a3a2c1a}
+header.scrolled{background:#fbf5e9c7}
+
+/* ===================== Aceeași rotunjire pentru toate butoanele ===================== */
+:root{--btn-r:12px}
+.btn,.btn.sm,.btn.big,#accBtn,.ic-btn,.iv-cta,.chip,.tab,.tabs,.sort-select,.tgl-dd-btn,.cal-nav,.close,.add-photo,.mc-actions .btn{border-radius:var(--btn-r)}
+.ic-btn{display:inline-flex;align-items:center;gap:8px}
