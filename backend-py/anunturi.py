@@ -12,19 +12,19 @@ from pydantic import BaseModel, Field
 
 from auth import TERMS_VERSION, valid_phone
 from mesaje import notify_support
-from util import current_user, fetch_all, fetch_one, fmt_lei, iso, num, pool, today
+from util import current_user, fetch_all, fetch_one, fmt_lei, num, pool, today
 
 router = APIRouter(prefix="/api", tags=["anunturi"])
 MAX_FILE = 10 * 1024 * 1024
 CONTRACT_EXT = (".pdf", ".doc", ".docx", ".odt")
 
 LISTING_COLS = """id, owner_id, owner_name, owner_phone, owner_since, title, type, price, unit, area, county, city, location,
-    address, lat, lng, geo, noise, access, description, rules, safety, declaration, img_urls, avail,
+    address, lat, lng, geo, noise, access, description, rules, safety, declaration, avail,
     contract_name, contract_size"""
 
 
 def listing_json(x, photo_ids=()) -> dict:
-    imgs = list(x["img_urls"]) + [f"/api/poze/{p}" for p in photo_ids]
+    imgs = [f"/api/poze/{p}" for p in photo_ids]
     return {
         "id": x["id"], "title": x["title"], "type": x["type"], "price": num(x["price"]), "unit": x["unit"], "area": num(x["area"]),
         "county": x["county"], "city": x["city"], "location": x["location"], "address": x["address"],

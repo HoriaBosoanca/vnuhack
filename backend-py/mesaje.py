@@ -1,11 +1,9 @@
 """Mesageria: conversații chiriaș ↔ proprietar și conversația cu Echipa SPAȚIU."""
 
-import re
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from util import current_user, fetch_all, fetch_one, fmt_num, iso, pool
+from util import current_user, fetch_all, fetch_one, iso, pool
 
 router = APIRouter(prefix="/api/conversatii", tags=["mesaje"])
 SUPORT = "Echipa SPAȚIU"
@@ -44,30 +42,7 @@ async def conversations_for(conn, me: int, only_id: int | None = None) -> list[d
     return out
 
 
-# ---------- Răspunsuri automate (proprietarii anunțurilor demo nu au cont) ----------
-
-PHRASE = {"extinguisher": "stingător", "evacuation": "căi de evacuare semnalizate", "smoke": "detector de fum"}
-
-
-def reply_for(x, text: str) -> str:
-    t = text.lower()
-    if x is None:
-        return "Mulțumim pentru mesaj! Un coleg din echipa de suport îți răspunde în cel mult 24 de ore."
-    s = x["safety"]
-    if re.search(r"isu|incendiu|stingăt|stingat|evacuare|siguran", t):
-        if s.get("isu"):
-            return f"Da, spațiul are autorizație ISU{' (nr. ' + s['isuNo'] + ')' if s.get('isuNo') else ''}. Vă pot trimite o copie înainte să semnăm."
-        has = [PHRASE[k] for k in ("extinguisher", "evacuation", "smoke") if s.get(k)]
-        return f"Momentan spațiul nu are autorizație ISU{', dar are ' + ' și '.join(has) if has else ''}. Vă rog să țineți cont de asta pentru tipul de activitate."
-    if re.search(r"pre[tț]|negoci|reducere|discount|cost", t):
-        return f"Prețul este {fmt_num(x['price'])} lei / {x['unit']}. Pentru o perioadă mai lungă putem discuta o reducere."
-    if re.search(r"vizion|vizit|văd|vad|vedea|programare", t):
-        return "Sigur, putem stabili o vizionare. Vă convine mâine după ora 17:00?"
-    if re.search(r"disponibil|liber|când|cand|perioad", t):
-        return "Da, spațiul este disponibil. Pentru ce perioadă v-ar interesa?"
-    if re.search(r"mul[tț]umesc|mersi", t):
-        return "Cu plăcere! Vă stau la dispoziție."
-    return "Mulțumesc pentru mesaj! Revin cu detalii cât de curând."
+SUPORT_REPLY = "Mulțumim pentru mesaj! Un coleg din echipa de suport îți răspunde în cel mult 24 de ore."
 
 
 # ---------- Endpoint-uri ----------
@@ -115,11 +90,9 @@ async def trimite(conv_id: int, body: MesajNou, request: Request, u=Depends(curr
         await conn.execute("INSERT INTO mesaje (conv_id, sender_id, text) VALUES (%s, %s, %s)", (conv_id, u["id"], text))
         other = "owner_unread" if c["user_id"] == u["id"] else "user_unread"
         await conn.execute(f"UPDATE conversatii SET {other} = {other} + 1 WHERE id = %s", (conv_id,))
-        if c["owner_id"] is None:
-            # Suportul sau un proprietar demo (fără cont) răspund automat.
-            x = await fetch_one(conn, "SELECT * FROM anunturi WHERE id = %s", (c["listing_id"],)) if c["listing_id"] else None
-            reply = "Acest anunț a fost retras de proprietar." if c["listing_id"] and not x else reply_for(x, text)
-            await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (conv_id, reply))
+        if c["listing_id"] is None:
+            # Conversația cu Echipa SPAȚIU: confirmare automată.
+            await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (conv_id, SUPORT_REPLY))
         return (await conversations_for(conn, u["id"], conv_id))[0]
 
 
