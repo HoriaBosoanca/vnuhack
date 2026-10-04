@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  useStore, S, loadState, filteredListings, setFilter, resetFilters, activeFilterCount, toggleFav, openDetail,
-  openPublish, openMessages, openAccount, openTerms, exportData, importData, listingRating, mapApi, anyOpen, closeTop,
+  useStore, S, loadAll, filteredListings, setFilter, resetFilters, activeFilterCount, toggleFav, openDetail,
+  openPublish, openMessages, openAccount, openTerms, listingRating, mapApi, anyOpen, closeTop,
   unreadCount, emit,
 } from './lib/store'
 import { COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtPrice, label, ruleKey } from './lib/utils'
@@ -133,7 +133,6 @@ function Explore() {
 }
 
 function Footer() {
-  const fileRef = useRef(null)
   const link = fn => e => { e.preventDefault(); fn() }
   return (
     <footer>
@@ -141,9 +140,6 @@ function Footer() {
       <a href="#" onClick={link(() => openTerms())}>Termeni și condiții</a>
       <a href="#" onClick={link(() => openMessages())}>Mesaje</a>
       <a href="#" onClick={link(openPublish)}>Publică un spațiu</a>
-      <a href="#" onClick={link(exportData)}>💾 Exportă datele</a>
-      <a href="#" onClick={link(() => fileRef.current.click())}>📂 Importă datele</a>
-      <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={e => { importData(e.target.files[0]); e.target.value = '' }} />
       <span className="copy">© 2026 SPAȚIU</span>
     </footer>
   )
@@ -151,7 +147,7 @@ function Footer() {
 
 export default function App() {
   const s = useStore()
-  useEffect(() => { loadState() }, [])
+  useEffect(() => { loadAll() }, [])
   /* Fără scroll pe pagină cât timp e deschisă o fereastră. */
   const open = anyOpen()
   useEffect(() => { document.body.classList.toggle('noscroll', open) }, [open])

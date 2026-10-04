@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   useStore, S, byId, isMine, hostRating, guestRating, myBookings, recvBookings, canCancel, findReview, bookingStarted,
-  closeM, openDetail, openMessages, openPublish, openTerms, openTicket, openReview, cancelBooking, logout, exportData, importData,
+  closeM, openDetail, openMessages, openPublish, openTerms, openTicket, openReview, cancelBooking, logout,
 } from '../lib/store'
 import { fmtDate, fmtDayY, fmtLei, fmtPrice, fmtRanges, fmtRt, thumb, todayKey } from '../lib/utils'
 import { Avatar, Modal, CloseBtn, Stars } from './ui'
@@ -43,7 +43,7 @@ function BookingItem({ b }) {
 }
 
 function RecvItem({ b }) {
-  const g = guestRating(b.userEmail)
+  const g = guestRating(b.userId)
   return (
     <div className="bk-item">
       <div className="grow"><b>{b.listingTitle}</b>
@@ -56,10 +56,10 @@ function RecvItem({ b }) {
 }
 
 export default function AccountModal() {
-  const s = useStore(), u = s.user, fileRef = useRef(null)
+  const s = useStore(), u = s.user
   if (!u) return <Modal name="account" id="accountModal" boxClass="modalbox narrow" />
   const mine = s.listings.filter(isMine), mb = myBookings(), rb = recvBookings()
-  const h = hostRating(u.email), g = guestRating(u.email)
+  const h = hostRating('u' + u.id), g = guestRating(u.id)
   const go = fn => () => { closeM('account'); fn() }
   return (
     <Modal name="account" id="accountModal" boxClass="modalbox narrow">
@@ -79,11 +79,7 @@ export default function AccountModal() {
         <div key={x.id} className="mini" onClick={go(() => openDetail(x.id))}><i style={{ backgroundImage: `url('${thumb(x.img)}')` }} />
           <div><b>{x.title}</b><div className="hint">{fmtPrice(x.price)} lei / {x.unit}, publicat la {fmtDate(x.declaration.at)}</div></div><span className="tag ok">Activ</span></div>
       )) : <p className="hint">Nu ai publicat încă niciun anunț.</p>}
-      <div className="email-status">💾 Datele se salvează automat în acest browser și rămân și după ce închizi pagina. Ca să le muți pe alt calculator, apasă „Exportă datele” și apoi „Importă datele” acolo.</div>
       <div className="form-actions">
-        <button className="btn" onClick={exportData}>💾 Exportă datele</button>
-        <button className="btn" onClick={() => fileRef.current.click()}>📂 Importă datele</button>
-        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={e => { importData(e.target.files[0]); e.target.value = '' }} />
         <button className="btn" onClick={logout}>Deconectează-te</button>
         <button className="btn" onClick={go(() => openMessages())}>💬 Mesaje</button>
         <button className="btn primary" onClick={go(openPublish)}>＋ Publică un spațiu</button>

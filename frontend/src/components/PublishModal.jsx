@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import L from 'leaflet'
 import { useStore, S, closeM, openM, openTerms, toast, goToFirstInvalid, publishListing } from '../lib/store'
+import { blobToDataURL } from '../lib/api'
 import { TILES, geocode } from '../lib/geo'
-import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, TERMS_VERSION, fmtSize, locText, validPhone, shrinkImage } from '../lib/utils'
+import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtSize, validPhone, shrinkImage } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
 
@@ -140,20 +141,23 @@ export default function PublishModal() {
     })
     if (!ok) return goToFirstInvalid('publishModal')
     if (!riskAckAt) return openM('risk')
-    if (!pubGeo.current) { setBusy(true); await geocodeForm(false); setBusy(false) }
+    setBusy(true)
+    if (!pubGeo.current) await geocodeForm(false)
     const g = pubGeo.current || { lat: COUNTIES[v('county')][0], lng: COUNTIES[v('county')][1], approx: true }
-    const x = {
-      id: Date.now(), title: v('title'), type: f.type, price: +v('price'), unit: f.unit, area: +v('area'), county: v('county'), city: v('city'), location: locText(v('city'), v('county')), address: v('address'),
-      lat: g.lat, lng: g.lng, geo: g.approx ? 'approx' : 'ok', avail: new Set(days),
-      noise: f.noise.replace(/^.*până la /, '≤').replace('Fără limită specificată', 'Fără limită'), access: { custom: `${f.from}–${f.to}`, '24/7': '24/7', owner: 'Doar cu proprietarul' }[f.access], rules: [...rules], contract,
-      imgs: photos.map(p => p.url), photoBlobs: photos.map(p => p.blob), desc: v('desc'),
-      owner: { name: S.user.name, phone: v('phone'), since: String(new Date().getFullYear()), email: S.user.email },
+    // Pozele și contractul pleacă la server ca data URL, în același JSON cu anunțul.
+    const payload = {
+      title: v('title'), type: f.type, price: +v('price'), unit: f.unit, area: +v('area'), county: v('county'), city: v('city'), address: v('address'),
+      lat: g.lat, lng: g.lng, geo: g.approx ? 'approx' : 'ok', phone: v('phone'), avail: [...days].sort(),
+      noise: f.noise.replace(/^.*până la /, '≤').replace('Fără limită specificată', 'Fără limită'), access: { custom: `${f.from}–${f.to}`, '24/7': '24/7', owner: 'Doar cu proprietarul' }[f.access],
+      desc: v('desc'), rules: [...rules],
       safety: { isu: f.isu, isuNo: f.isu ? v('isuNo') : '', extinguisher: f.ext, evacuation: f.evac, smoke: f.smoke },
-      // Dovada declarației: în producție se salvează pe server împreună cu IP-ul și versiunea termenilor.
-      declaration: { at: new Date(), termsVersion: TERMS_VERSION, riskWarning: { at: riskAckAt, valuablesRemoved: true, risksAssumed: true, platformNotLiable: true } },
+      photos: await Promise.all(photos.map(p => blobToDataURL(p.blob))),
+      contract: contract ? { name: contract.name, data: await blobToDataURL(contract.blob) } : null,
+      riskAckAt: riskAckAt.toISOString(),
     }
-    x.img = x.imgs[0]
-    publishListing(x); resetForm()
+    const ok2 = await publishListing(payload)
+    setBusy(false)
+    if (ok2) resetForm()
   }
 
   return (
@@ -234,7 +238,7 @@ export default function PublishModal() {
         <div className="section-title">Declarație *</div>
         <Field full err={errs.declare}><label className="check declare"><input type="checkbox" checked={f.declare} onChange={set('declare', 'declare')} /><span>Declar pe propria răspundere că informațiile din acest anunț, inclusiv cele privind siguranța la incendiu, sunt reale, că <b>îmi asum toate riscurile</b> legate de închirierea acestui spațiu și că <b>suport toate consecințele legale</b> ce decurg din aceasta. Confirm că am citit și accept <a href="#" onClick={e => { e.preventDefault(); openTerms(() => { setF(o => ({ ...o, declare: true })); clear('declare') }) }}>Termenii și condițiile</a>.</span></label></Field>
       </div>
-      <div className="form-actions"><span className="hint">Câmpurile cu * sunt obligatorii.</span><button className="btn" onClick={() => closeM('publish')}>Anulează</button><button className="btn primary" disabled={busy} onClick={() => publish(null)}>{busy ? 'Caut adresa pe hartă…' : 'Publică anunțul'}</button></div>
+      <div className="form-actions"><span className="hint">Câmpurile cu * sunt obligatorii.</span><button className="btn" onClick={() => closeM('publish')}>Anulează</button><button className="btn primary" disabled={busy} onClick={() => publish(null)}>{busy ? 'Se publică…' : 'Publică anunțul'}</button></div>
       {createPortal(<RiskModal onConfirm={publish} />, document.body)}
     </Modal>
   )

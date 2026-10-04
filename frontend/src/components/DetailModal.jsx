@@ -34,7 +34,7 @@ function Reviews({ x }) {
 /* ---- Retragerea anunțului (doar pentru proprietar) ---- */
 function OwnerZone({ x }) {
   const [confirming, setConfirming] = useState(false)
-  const n = S.bookings.filter(b => b.listingId === x.id && canCancel(b)).length
+  const n = S.bookingsRecv.filter(b => b.listingId === x.id && canCancel(b)).length
   return (
     <div className="owner-zone">
       {confirming ? <>

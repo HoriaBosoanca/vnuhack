@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore, S, byId, closeM, openTerms, goToFirstInvalid, toast, createBooking } from '../lib/store'
 import {
   HOURS, HOURS_END, pad, toMin, todayKey, hoursBetween, fmtHours, fmtLei, fmtPrice, fmtRanges, fullAddress, accessWindow,
-  luhn, cardBrand, expOk, fmtCard, fmtExp, validEmail, bookingCode,
+  luhn, cardBrand, expOk, fmtCard, fmtExp, validEmail,
 } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
@@ -46,7 +46,7 @@ function Booking({ x }) {
     if (!check({ bookCal: c.days.length ? '' : 'Alege cel puțin o zi din calendar.', bFrom: hourErr })) return goToFirstInvalid('bookModal')
     setP(o => ({ ...o, name: o.name || S.user.name, email: o.email || S.user.email })); setStep(2)
   }
-  function pay() {
+  async function pay() {
     const num = p.card.replace(/\s/g, ''), email = p.email.trim()
     const ok = check({
       pName: p.name.trim().length >= 3 ? '' : 'Scrie numele de pe card.',
@@ -59,15 +59,14 @@ function Booking({ x }) {
     if (!ok) return goToFirstInvalid('bookModal')
     if (c.days.some(k => !x.avail.has(k))) { setStep(1); setDays(new Set()); setCalKey(k => k + 1); return toast('Unele zile tocmai au fost rezervate. Alege din nou.') }
     setPaying(true)
-    // DEMO: aici, în producție, se apelează procesatorul de plăți (ex. Stripe / Netopia) prin serverul tău.
-    setTimeout(() => {
-      const u = S.user
-      createBooking({
-        id: 'b' + Date.now(), code: bookingCode(), listingId: x.id, listingTitle: x.title, address: fullAddress(x), img: x.img, ownerName: x.owner.name, ownerPhone: x.owner.phone,
-        userEmail: u.email, userName: u.name, ticketEmail: email, days: c.days, from: c.from, to: c.to, hours: c.hours, unit: x.unit, price: x.price, line: c.line, total: c.total,
-        status: 'confirmată', createdAt: new Date(), payment: { txn: 'TXN-' + Date.now().toString(36).toUpperCase(), brand: cardBrand(num), last4: num.slice(-4), holder: p.name.trim(), paidAt: new Date() },
-      })
-    }, 1200)
+    // DEMO: plata e simulată. Numărul cardului nu pleacă din browser; serverul primește doar tipul, ultimele 4 cifre și titularul.
+    const err = await createBooking({
+      listingId: x.id, days: c.days, hourFrom: c.from, hourTo: c.to, ticketEmail: email,
+      payment: { brand: cardBrand(num), last4: num.slice(-4), holder: p.name.trim() },
+    })
+    if (!err) return
+    setPaying(false); toast(err.message)
+    if (err.status === 409) { setStep(1); setDays(new Set()); setCalKey(k => k + 1) }
   }
 
   return <>

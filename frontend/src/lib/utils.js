@@ -1,6 +1,4 @@
 /* ================== CONSTANTE & UTILITARE ================== */
-export const TERMS_VERSION = '1.0'
-
 /* Județele României + coordonatele aproximative ale reședinței (pentru pin pe hartă). */
 export const COUNTIES = {'Alba':[46.07,23.58],'Arad':[46.18,21.31],'Argeș':[44.86,24.87],'Bacău':[46.57,26.91],'Bihor':[47.07,21.92],'Bistrița-Năsăud':[47.13,24.5],'Botoșani':[47.75,26.67],'Brăila':[45.27,27.96],'Brașov':[45.65,25.6],'București':[44.43,26.1],'Buzău':[45.15,26.82],'Călărași':[44.2,27.33],'Caraș-Severin':[45.3,21.89],'Cluj':[46.77,23.59],'Constanța':[44.18,28.63],'Covasna':[45.87,25.79],'Dâmbovița':[44.93,25.46],'Dolj':[44.32,23.8],'Galați':[45.44,28.05],'Giurgiu':[43.9,25.97],'Gorj':[45.04,23.27],'Harghita':[46.36,25.8],'Hunedoara':[45.88,22.9],'Ialomița':[44.56,27.37],'Iași':[47.16,27.59],'Ilfov':[44.55,26.1],'Maramureș':[47.66,23.58],'Mehedinți':[44.63,22.66],'Mureș':[46.54,24.56],'Neamț':[46.93,26.37],'Olt':[44.43,24.36],'Prahova':[44.94,26.02],'Sălaj':[47.19,23.06],'Satu Mare':[47.79,22.89],'Sibiu':[45.79,24.15],'Suceava':[47.65,26.26],'Teleorman':[43.97,25.33],'Timiș':[45.75,21.23],'Tulcea':[45.18,28.8],'Vâlcea':[45.1,24.37],'Vaslui':[46.64,27.73],'Vrancea':[45.7,27.18]}
 export const COUNTY_NAMES = Object.keys(COUNTIES).sort((a, b) => a.localeCompare(b, 'ro'))
@@ -64,14 +62,6 @@ export function expOk(v) { const m = /^(\d\d)\/(\d\d)$/.exec(v); if (!m) return 
 export const fmtCard = v => v.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ')
 export const fmtExp = v => { const d = v.replace(/\D/g, '').slice(0, 4); return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d }
 export const bookingCode = () => 'SP-' + [...crypto.getRandomValues(new Uint8Array(6))].map(b => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('')
-
-/* ---- Parole: hash SHA-256 cu „sare”. Fiind totul în browser, e o protecție de demo, nu securitate reală. ---- */
-export const newSalt = () => [...crypto.getRandomValues(new Uint8Array(12))].map(b => b.toString(16).padStart(2, '0')).join('')
-export async function hashPass(pass, salt) {
-  const data = new TextEncoder().encode(salt + ':' + pass)
-  if (window.crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', data); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('') }
-  let h = 0; for (const b of data) h = (h * 31 + b) >>> 0; return 'x' + h.toString(16)
-}
 
 export function downloadBlob(blob, name) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useStore, S, byId, ownerKey, findReview, closeM, goToFirstInvalid, addReview } from '../lib/store'
-import { fmtRanges, shortName } from '../lib/utils'
+import { useStore, findBooking, findReview, closeM, goToFirstInvalid, addReview } from '../lib/store'
+import { fmtRanges } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 
 function StarField({ id, label, value, onChange, err }) {
@@ -20,10 +20,7 @@ function Review({ b, type }) {
     const ok = check({ rvStars: stars ? '' : 'Alege de la 1 la 5 stele.', rvHost: type === 'listing' && !host ? 'Alege de la 1 la 5 stele.' : '' })
     if (!ok) return goToFirstInvalid('reviewModal')
     if (findReview(b, type)) return closeM('review')
-    const x = byId(b.listingId), u = S.user
-    addReview(type === 'listing'
-      ? { id: 'r' + Date.now(), type, bookingId: b.id, listingId: b.listingId, ownerKey: x ? ownerKey(x.owner) : null, authorName: shortName(u.name), authorEmail: u.email, stars, hostStars: host, comment: text.trim(), createdAt: new Date() }
-      : { id: 'r' + Date.now(), type, bookingId: b.id, listingId: b.listingId, guestEmail: b.userEmail, guestName: b.userName, authorName: shortName(u.name), authorEmail: u.email, stars, comment: text.trim(), createdAt: new Date() })
+    addReview({ bookingId: b.id, type, stars, hostStars: type === 'listing' ? host : null, comment: text.trim() })
   }
   return <>
     <div className="modalhead"><div><h2>{type === 'listing' ? 'Lasă o recenzie' : 'Evaluează clientul'}</h2>
@@ -39,6 +36,6 @@ function Review({ b, type }) {
 }
 
 export default function ReviewModal() {
-  const s = useStore(), r = s.ui.review, b = r ? s.bookings.find(z => z.id === r.bookingId) : null
+  const s = useStore(), r = s.ui.review, b = r ? findBooking(r.bookingId) : null
   return <Modal name="review" id="reviewModal" boxClass="modalbox narrow" boxId="reviewBox">{b && <Review key={r.nonce} b={b} type={r.type} />}</Modal>
 }

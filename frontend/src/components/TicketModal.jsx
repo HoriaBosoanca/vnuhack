@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { useStore, S, downloadTicket, printTicket, resendTicket } from '../lib/store'
+import { useStore, findBooking, downloadTicket, printTicket, resendTicket } from '../lib/store'
 import { fmtDate } from '../lib/utils'
 import { ticketHTML } from '../lib/ticket'
 import { Modal, CloseBtn } from './ui'
 
 export default function TicketModal() {
-  const s = useStore(), b = s.ui.ticketId ? s.bookings.find(z => z.id === s.ui.ticketId) : null
+  const s = useStore(), b = s.ui.ticketId ? findBooking(s.ui.ticketId) : null
   useEffect(() => { if (s.ui.open.ticket) document.getElementById('ticketBox').scrollTop = 0 }, [s.ui.open.ticket, s.ui.ticketId])
   const e = b?.email || {}
   return (
