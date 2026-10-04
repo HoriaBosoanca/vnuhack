@@ -1,1 +1,1 @@
-# SPAȚIU — frontend (React + Vite)
+
