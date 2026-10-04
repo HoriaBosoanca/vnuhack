@@ -12,12 +12,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from psycopg_pool import AsyncConnectionPool
 
-import post
+import postari
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
     "postgresql://neondb_owner:npg_DaHNVl7CXOc8@ep-aged-pine-b17368dl-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
 )
+PORT = int(os.environ.get("PORT", "8000"))
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS postari (
@@ -57,9 +58,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Inchiriere spatii", lifespan=lifespan)
-app.include_router(post.router)
+app.include_router(postari.router)
 
 
 @app.get("/health")
 async def health():
     return {"ok": True}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="127.0.0.1", port=PORT, reload=True)
