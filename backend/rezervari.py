@@ -15,6 +15,7 @@ from mesaje import notify_support
 from util import access_window, current_user, fetch_all, fetch_one, fmt_lei, fmt_num, fmt_ranges, iso, num, pool, to_min, today
 
 router = APIRouter(prefix="/api", tags=["rezervari"])
+FEE_RATE = 0.05  # taxa SPAȚIU, TVA inclus
 HOUR_RE = re.compile(r"^([01]\d|2[0-3]):[03]0$|^24:00$")
 
 
@@ -26,6 +27,7 @@ def booking_json(b) -> dict:
         "img": s["img"], "ownerName": s["ownerName"], "ownerPhone": s["ownerPhone"], "userId": b["user_id"], "userName": b["user_name"],
         "ticketEmail": b["ticket_email"], "days": [d.isoformat() for d in sorted(b["days"])], "from": b["hour_from"], "to": b["hour_to"],
         "hours": num(b["hours"]), "unit": s["unit"], "price": s["price"], "line": b["line"], "total": num(b["total"]),
+        "subtotal": s.get("subtotal", num(b["total"])), "fee": s.get("fee", 0),
         "status": b["status"], "createdAt": iso(b["created_at"]), "payment": b["payment"],
         "cancelledAt": iso(b["cancelled_at"]), "cancelReason": b["cancel_reason"],
         "refund": {"amount": num(b["total"]), "at": iso(b["cancelled_at"])} if cancelled else None,
@@ -102,11 +104,15 @@ async def rezerva(b: RezervareNoua, request: Request, u=Depends(current_user)):
                     raise HTTPException(422, f"Alege un interval în programul de acces: {x['access']}.")
             qty = hours * len(days)
             line = f"{len(days)} {'zi' if len(days) == 1 else 'zile'} × {fmt_num(hours, 1)} h × {fmt_lei(price)}"
-        total = round(qty * price, 2)
+        # Total de plată = prețul spațiului + taxa SPAȚIU de 5% (TVA inclus).
+        subtotal = round(qty * price, 2)
+        fee = round(subtotal * FEE_RATE, 2)
+        total = round(subtotal + fee, 2)
         p = await fetch_one(conn, "SELECT id FROM poze WHERE anunt_id = %s ORDER BY pos LIMIT 1", (x["id"],))
         img = f"/api/poze/{p['id']}" if p else ""
         snapshot = {"listingTitle": x["title"], "address": f"{x['address']}, {x['location']}", "img": img,
-                    "ownerName": x["owner_name"], "ownerPhone": x["owner_phone"], "unit": unit, "price": num(x["price"])}
+                    "ownerName": x["owner_name"], "ownerPhone": x["owner_phone"], "unit": unit, "price": num(x["price"]),
+                    "subtotal": subtotal, "fee": fee}
         payment = {"txn": "TXN-" + format(int(_time.time() * 1000), "X"), "brand": b.payment.brand, "last4": b.payment.last4,
                    "holder": b.payment.holder.strip(), "paidAt": None}
         await conn.execute("UPDATE anunturi SET avail = %s WHERE id = %s", (sorted(avail - set(days)), x["id"]))

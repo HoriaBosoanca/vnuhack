@@ -42,7 +42,7 @@ async def conversations_for(conn, me: int, only_id: int | None = None) -> list[d
     return out
 
 
-SUPORT_REPLY = "Mulțumim pentru mesaj! Un coleg din echipa de suport îți răspunde în cel mult 24 de ore."
+SUPORT_SALUT = "Bună! Dacă ai orice problemă sau întâmpini orice dificultate pe platformă, contactează-ne aici și te ajutăm."
 
 
 # ---------- Endpoint-uri ----------
@@ -78,6 +78,17 @@ async def deschide(body: ConvNoua, request: Request, u=Depends(current_user)):
         return (await conversations_for(conn, u["id"], c["id"]))[0]
 
 
+@router.post("/suport")
+async def suport(request: Request, u=Depends(current_user)):
+    """„Ai nevoie de ajutor?”: deschide (sau creează, cu un mesaj de salut) conversația cu Echipa SPAȚIU."""
+    async with pool(request).connection() as conn:
+        c = await fetch_one(conn, "SELECT id FROM conversatii WHERE user_id = %s AND listing_id IS NULL", (u["id"],))
+        if not c:
+            c = await fetch_one(conn, "INSERT INTO conversatii (user_id, owner_name) VALUES (%s, %s) RETURNING id", (u["id"], SUPORT))
+            await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (c["id"], SUPORT_SALUT))
+        return (await conversations_for(conn, u["id"], c["id"]))[0]
+
+
 @router.post("/{conv_id}/mesaje")
 async def trimite(conv_id: int, body: MesajNou, request: Request, u=Depends(current_user)):
     text = body.text.strip()
@@ -90,9 +101,6 @@ async def trimite(conv_id: int, body: MesajNou, request: Request, u=Depends(curr
         await conn.execute("INSERT INTO mesaje (conv_id, sender_id, text) VALUES (%s, %s, %s)", (conv_id, u["id"], text))
         other = "owner_unread" if c["user_id"] == u["id"] else "user_unread"
         await conn.execute(f"UPDATE conversatii SET {other} = {other} + 1 WHERE id = %s", (conv_id,))
-        if c["listing_id"] is None:
-            # Conversația cu Echipa SPAȚIU: confirmare automată.
-            await conn.execute("INSERT INTO mesaje (conv_id, text) VALUES (%s, %s)", (conv_id, SUPORT_REPLY))
         return (await conversations_for(conn, u["id"], conv_id))[0]
 
 

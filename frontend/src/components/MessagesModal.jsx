@@ -46,7 +46,7 @@ export default function MessagesModal() {
         <div className="thread" ref={threadRef}>
           {c ? <>
             {x && <div className="chat-hint">Nu trimite bani în avans înainte să vezi spațiul și documentele lui. Ține discuția aici, pe platformă.</div>}
-            {c.messages.map((m, i) => <div key={i} className={`bubble ${m.from}`}>{m.text}<time>{fmtTime(m.t)}</time></div>)}
+            {c.messages.map((m, i) => <div key={i} className={`bubble ${m.from}`}>{m.text}<div className="bubble-meta"><time>{fmtTime(m.t)}</time></div></div>)}
             {c.typing && <div className="typing">{c.with.split(' ')[0]} scrie…</div>}
           </> : <div className="chat-empty"><div><div style={{ fontSize: 34 }}>💬</div><b>Mesajele tale</b><p>Alege o conversație din stânga sau contactează un proprietar din pagina unui anunț.</p></div></div>}
         </div>

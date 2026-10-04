@@ -4,7 +4,7 @@ import L from 'leaflet'
 import { useStore, S, closeM, openM, openTerms, toast, goToFirstInvalid, publishListing } from '../lib/store'
 import { blobToDataURL } from '../lib/api'
 import { TILES, geocode } from '../lib/geo'
-import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtSize, validPhone, shrinkImage } from '../lib/utils'
+import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtSize, fmtLei, feeOf, validPhone, shrinkImage } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
 
@@ -166,7 +166,8 @@ export default function PublishModal() {
       <div className="formgrid">
         <Field full err={errs.title}><label htmlFor="fTitle">Titlu anunț *</label><input id="fTitle" ref={titleRef} value={f.title} onChange={set('title', 'title')} placeholder="ex. Garaj uscat pentru depozitare" /></Field>
         <div className="field"><label htmlFor="fType">Tip</label><select id="fType" value={f.type} onChange={set('type')}><option value="storage">Depozitare</option><option value="event">Evenimente</option><option value="work">Lucru</option><option value="leisure">Timp liber</option></select></div>
-        <Field err={errs.price}><label htmlFor="fPrice">Preț *</label><input id="fPrice" type="number" min="1" placeholder="ex. 150" value={f.price} onChange={set('price', 'price')} /><span className="hint">lei / unitatea aleasă</span></Field>
+        <Field err={errs.price}><label htmlFor="fPrice">Preț *</label><input id="fPrice" type="number" min="1" placeholder="ex. 150" value={f.price} onChange={set('price', 'price')} /><span className="hint">lei / unitatea aleasă</span>
+          <span className="hint">{+f.price > 0 ? `Taxă SPAȚIU: ${fmtLei(feeOf(+f.price))} (5%, TVA inclus) pentru fiecare unitate rezervată.` : 'Taxa SPAȚIU: 5% din preț, cu TVA inclus.'}</span></Field>
         <Field err={errs.area}><label htmlFor="fArea">Suprafață (m²) *</label><input id="fArea" type="number" min="1" placeholder="ex. 30" value={f.area} onChange={set('area', 'area')} /></Field>
         <div className="field"><label htmlFor="fUnit">Unitate de preț</label><select id="fUnit" value={f.unit} onChange={set('unit')}><option>lună</option><option>zi</option><option>oră</option></select></div>
         <Field err={errs.county}><label htmlFor="fCounty">Județ *</label>
@@ -200,6 +201,7 @@ export default function PublishModal() {
           <span className="hint">Până la 10 poze, le poți și trage aici. Prima e coperta și apare în bula de pe hartă; apasă pe o poză ca s-o faci copertă.</span>
         </Field>
         <div className="field full"><label htmlFor="fDesc">Descriere</label><textarea id="fDesc" rows="3" value={f.desc} onChange={set('desc')} placeholder="Ce poate face chiriașul aici? Ce restricții există?" /></div>
+        <div className="field full"><div className="hint" style={{ padding: '10px 12px', borderRadius: 10, background: '#f3f6f4', border: '1px solid #dce5df' }}>💳 <b>Taxă SPAȚIU: 5%</b> din prețul final al fiecărei rezervări, cu TVA inclus. Taxa va fi afișată și calculată înainte de confirmarea rezervării.</div></div>
 
         <div className="section-title">📅 Când e liber spațiul * <span className="hint">· apasă pe zile sau trage peste ele ca să le marchezi</span></div>
         <Field full err={errs.pubCal}><Calendar key={calKey} mode="edit" days={days} onChange={d => { setDays(d); if (d.size) clear('pubCal') }} /></Field>
