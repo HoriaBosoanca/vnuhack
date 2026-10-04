@@ -30,7 +30,7 @@ import rezervari
 from schema import init_db
 
 def load_env_file(path=os.path.join(os.path.dirname(__file__), ".env")):
-    """Citește backend-py/.env (KEY=valoare pe fiecare linie), dacă există. Variabilele deja setate au prioritate."""
+    """Citește backend/.env (KEY=valoare pe fiecare linie), dacă există. Variabilele deja setate au prioritate."""
     if not os.path.exists(path):
         return
     with open(path, encoding="utf-8") as f:
@@ -41,7 +41,7 @@ def load_env_file(path=os.path.join(os.path.dirname(__file__), ".env")):
 
 
 load_env_file()
-# Link-ul la baza de date vine doar din mediu: pe Render din „Environment”, local din backend-py/.env.
+# Link-ul la baza de date vine doar din mediu: pe Render din „Environment”, local din backend/.env.
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 PORT = int(os.environ.get("PORT", "8000"))
 # Site-urile care pot apela API-ul, separate prin virgulă (ex. https://spatiu.onrender.com). Implicit: oricare.
@@ -51,7 +51,7 @@ CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(","
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not DATABASE_URL:
-        raise RuntimeError("Lipsește DATABASE_URL: setează variabila de mediu (pe Render: Environment) sau pune-o în backend-py/.env")
+        raise RuntimeError("Lipsește DATABASE_URL: setează variabila de mediu (pe Render: Environment) sau pune-o în backend/.env")
     # prepare_threshold=None: fără prepared statements pe server, ca să meargă prin pooler-ul Neon (PgBouncer).
     pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=5, open=False, kwargs={"prepare_threshold": None})
     await pool.open()
