@@ -6,7 +6,7 @@ import {
 } from './lib/store'
 import { COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtPrice, label, ruleKey } from './lib/utils'
 import MapPanel from './components/MapPanel'
-import { Avatar, RatingLine, Modal } from './components/ui'
+import { Avatar, RatingLine, Modal, ToggleDropdown } from './components/ui'
 import Calendar from './components/Calendar'
 import ProfileModal from './components/ProfileModal'
 import DetailModal from './components/DetailModal'
@@ -42,7 +42,7 @@ function Header() {
 function Hero() {
   const s = useStore(), f = s.ui.filters, nf = activeFilterCount()
   return (
-    <section className="hero"><div className="hero-in"><div className="hero-main">
+    <section className={`hero${s.ui.fltOpen ? ' flt-open' : ''}`}><div className="hero-in"><div className="hero-main">
       <h1>Găsește spațiul pentru ceea ce ai nevoie.</h1>
       <div className="search">
         <input id="search" value={f.q} onChange={e => setFilter({ q: e.target.value })} placeholder="Ex. garaj pentru depozitare, casă pentru petrecere..." />
@@ -58,21 +58,13 @@ function Hero() {
 
 function Filters() {
   const s = useStore(), f = s.ui.filters
-  /* Regulile disponibile: cele predefinite + toate regulile din anunțuri, fără dubluri. */
-  const seen = new Map()
-  ;[...RULE_PRESETS, ...s.listings.filter(x => !x.removed).flatMap(x => x.rules || [])].forEach(r => { const k = ruleKey(r); if (k && !seen.has(k)) seen.set(k, r) })
-  f.rules.forEach(k => { if (!seen.has(k)) seen.set(k, k) })
-  const toggleRule = k => setFilter({ rules: f.rules.includes(k) ? f.rules.filter(r => r !== k) : [...f.rules, k] })
+  const toggleRule = o => { const k = ruleKey(o); setFilter({ rules: f.rules.includes(k) ? f.rules.filter(r => r !== k) : [...f.rules, k] }) }
   return (
     <div className="filters" id="filters">
       <div className="fgrid">
         <div className="field"><label htmlFor="type">Tip spațiu</label>
           <select id="type" value={f.type} onChange={e => setFilter({ type: e.target.value })}>
             <option value="all">Orice tip</option><option value="event">Evenimente</option><option value="storage">Depozitare</option><option value="work">Lucru</option><option value="leisure">Timp liber</option>
-          </select></div>
-        <div className="field"><label htmlFor="duration">Durată</label>
-          <select id="duration" value={f.duration} onChange={e => setFilter({ duration: e.target.value })}>
-            <option value="all">Orice durată</option><option value="hour">Ore</option><option value="day">Zi</option><option value="month">Lună</option>
           </select></div>
         <div className="field"><label htmlFor="fltCounty">Județ</label>
           <select id="fltCounty" value={f.county} onChange={e => setFilter({ county: e.target.value })}><option value="">Toate județele</option>{COUNTY_NAMES.map(c => <option key={c}>{c}</option>)}</select></div>
@@ -87,8 +79,8 @@ function Filters() {
         </div>
         <div className="field full cal-field"><label>Disponibilitate <span className="hint">· alege zilele sau perioadele dorite (click sau trage peste zile); vezi doar spațiile libere în toate zilele alese</span></label>
           <Calendar mode="edit" days={f.days} onChange={d => setFilter({ days: d })} /></div>
-        <div className="field full"><label>Reguli ale casei <span className="hint">· bifează o regulă ca să vezi doar spațiile unde NU se aplică (ex. „Fumatul interzis” → spații unde se poate fuma)</span></label>
-          <div className="rule-presets">{[...seen.keys()].map(k => { const on = f.rules.includes(k); return <button key={k} type="button" className={`chip${on ? ' active' : ''}`} aria-pressed={on} onClick={() => toggleRule(k)}>{seen.get(k)}</button> })}</div></div>
+        <div className="field full"><label htmlFor="fltRules">Reguli ale casei <span className="hint">· activează ce îți trebuie; vezi doar spațiile care le au pe toate</span></label>
+          <ToggleDropdown id="fltRules" label="Alege opțiunile" options={RULE_PRESETS} isOn={o => f.rules.includes(ruleKey(o))} onToggle={toggleRule} /></div>
       </div>
       <div className="form-actions" style={{ marginTop: 12 }}><button className="btn sm" onClick={resetFilters}>Resetează filtrele</button></div>
     </div>
@@ -137,7 +129,7 @@ function Explore() {
         <div className="toolbar">
           <label className="sort-label" htmlFor="sortBy">Sortează</label>
           <select id="sortBy" className="sort-select" value={s.ui.filters.sort} onChange={e => setFilter({ sort: e.target.value })} aria-label="Sortează proprietățile">
-            <option value="default">Relevanță</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
+            <option value="default">Recente</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
             <option value="ratingDesc">Rating: mare → mic</option><option value="ratingAsc">Rating: mic → mare</option>
           </select>
           <span className="count">{data.length}{data.length === 1 ? ' spațiu disponibil' : ' spații disponibile'}</span>

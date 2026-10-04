@@ -8,7 +8,7 @@ import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, accessWindow, toMin
    Datele (anunțuri, conturi, rezervări, recenzii, mesaje) vin de la backend-ul Python. */
 export const MODALS = ['help', 'detail', 'publish', 'profile', 'msg', 'account', 'auth', 'book', 'ticket', 'review', 'risk', 'terms'] // ordinea = ordinea de suprapunere
 
-export const defaultFilters = () => ({ q: '', type: 'all', duration: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'default' })
+export const defaultFilters = () => ({ q: '', type: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'default' })
 
 /* Preferințe locale (doar în acest browser): favorite și harta ascunsă. */
 const local = {
@@ -180,15 +180,14 @@ function passFilters(x, f) {
   if (f.access === 'range' && x.access !== '24/7') { const w = accessWindow(x); if (!w) return false; let a = toMin(f.from), b = toMin(f.to); if (b <= a) b += 1440; if (a < w[0]) { a += 1440; b += 1440 } if (a < w[0] || b > w[1]) return false }
   /* Disponibilitate: spațiul trebuie să fie liber în toate zilele alese (cele din trecut se ignoră). */
   if (f.days.size) { const tk = todayKey(); for (const k of f.days) if (k >= tk && !x.avail.has(k)) return false }
-  /* Reguli: o regulă bifată ascunde spațiile unde se aplică (ex. „Fumatul interzis” → spații unde se poate fuma). */
-  const keys = (x.rules || []).map(ruleKey); for (const k of f.rules) if (keys.includes(k)) return false
+  /* Opțiunile casei activate în filtre (ex. „Fumatul permis”): spațiul trebuie să le aibă pe toate. */
+  const keys = (x.rules || []).map(ruleKey); for (const k of f.rules) if (!keys.includes(k)) return false
   return true
 }
 export function filteredListings() {
   const f = S.ui.filters, q = normalizeText(f.q)
   const data = S.listings.filter(x => (f.type === 'all' || x.type === f.type)
     && (!q || normalizeText([x.title, x.location, x.address, x.desc, x.type, label(x.type)].join(' ')).includes(q))
-    && (f.duration === 'all' || (f.duration === 'month' && x.unit === 'lună') || (f.duration === 'day' && x.unit === 'zi') || (f.duration === 'hour' && x.unit === 'oră'))
     && passFilters(x, f))
   /* Sortare: anunțurile fără recenzii contează ca rating 0; la egalitate, după numărul de recenzii, apoi după preț. */
   const rt = x => { const r = listingRating(x); return r.n ? r.avg : 0 }, nr = x => listingRating(x).n
@@ -198,7 +197,7 @@ export function filteredListings() {
   else if (f.sort === 'ratingAsc') data.sort((a, b) => rt(a) - rt(b) || nr(a) - nr(b) || a.price - b.price)
   return data
 }
-export function activeFilterCount() { const f = S.ui.filters; return [f.type !== 'all', f.duration !== 'all', f.county, f.min || f.max, f.access !== 'any'].filter(Boolean).length + f.rules.length + (f.days.size ? 1 : 0) }
+export function activeFilterCount() { const f = S.ui.filters; return [f.type !== 'all', f.county, f.min || f.max, f.access !== 'any'].filter(Boolean).length + f.rules.length + (f.days.size ? 1 : 0) }
 
 /* ================== ANUNȚURI ================== */
 export function openDetail(id) {

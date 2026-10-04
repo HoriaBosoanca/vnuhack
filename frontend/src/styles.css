@@ -284,3 +284,19 @@ header{transition:box-shadow .3s,background .3s}header.scrolled{box-shadow:0 6px
 .bubble.me{width:max-content;height:auto}.bubble.me::before{content:none}
 .bubble,.chat-hint,.typing{flex-shrink:0}
 @media(max-width:720px){.conv-list{max-height:none}}
+
+/* Cât timp panoul de filtre e deschis, conținutul hero-ului nu se mai estompează și nu se mai mișcă la scroll. */
+.hero.flt-open .hero-main{opacity:1!important;transform:none!important}
+
+/* ---------- Meniu derulant cu comutatoare (reguli ale casei) ---------- */
+.tgl-dd{position:relative;max-width:420px}
+.tgl-dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.tgl-dd-btn:hover{border-color:#cfb98a}
+.tgl-dd-arrow{font-size:12px;color:var(--muted);transition:transform .2s}.tgl-dd.open .tgl-dd-arrow{transform:rotate(180deg)}
+.tgl-dd-menu{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px}
+.tgl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:9px;cursor:pointer;font-size:14px}
+.tgl-row:hover{background:#fbf6ec}
+.tgl{appearance:none;-webkit-appearance:none;flex:none;width:40px;height:22px;border-radius:999px;background:#ddd2bf;position:relative;cursor:pointer;transition:background .2s;margin:0}
+.tgl::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s}
+.tgl:checked{background:var(--accent)}.tgl:checked::after{transform:translateX(18px)}
+.tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

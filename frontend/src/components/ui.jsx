@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore, closeM } from '../lib/store'
 import { colorFor, initials, fmtRt } from '../lib/utils'
 
@@ -54,6 +54,32 @@ export function SafetyTags({ x }) {
     {s.extinguisher && <span className="tag ok">✓ Stingător</span>}
     {s.evacuation && <span className="tag ok">✓ Evacuare</span>}
   </>
+}
+
+/* Meniu derulant cu câte un comutator (toggle) pentru fiecare opțiune. Se închide la click în afara lui. */
+export function ToggleDropdown({ label, options, isOn, onToggle, id }) {
+  const [open, setOpen] = useState(false), ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const close = e => { if (!ref.current?.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close)
+  }, [open])
+  const n = options.filter(isOn).length
+  return (
+    <div className={`tgl-dd${open ? ' open' : ''}`} ref={ref}>
+      <button type="button" id={id} className="tgl-dd-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        <span>{label}{n ? ` (${n})` : ''}</span><span className="tgl-dd-arrow" aria-hidden="true">▾</span>
+      </button>
+      {open && <div className="tgl-dd-menu" role="menu">
+        {options.map(o => (
+          <label key={o} className="tgl-row" role="menuitemcheckbox" aria-checked={isOn(o)}>
+            <span>{o}</span>
+            <input type="checkbox" className="tgl" checked={isOn(o)} onChange={() => onToggle(o)} />
+          </label>
+        ))}
+      </div>}
+    </div>
+  )
 }
 
 /* Link „Termenii și condițiile” într-un label de checkbox. */

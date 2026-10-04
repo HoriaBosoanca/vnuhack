@@ -5,7 +5,8 @@ export const COUNTY_NAMES = Object.keys(COUNTIES).sort((a, b) => a.localeCompare
 
 export const SAFETY = [['isu', 'Autorizație ISU'], ['extinguisher', 'Stingător de incendiu'], ['evacuation', 'Căi de evacuare'], ['smoke', 'Detector de fum']]
 export const SAFETY_PHRASE = { extinguisher: 'stingător', evacuation: 'căi de evacuare semnalizate', smoke: 'detector de fum' }
-export const RULE_PRESETS = ['🚭 Fumatul interzis', '🐾 Fără animale de companie', '🔇 Liniște după ora 22:00', '🧹 Spațiul se predă curat', '🚗 Parcare doar în locul indicat']
+/* Opțiunile casei: proprietarul le activează la publicare, chiriașul le caută din filtre. */
+export const RULE_PRESETS = ['🚬 Fumatul permis', '🐾 Animale de companie permise', '🔊 Zgomot permis după ora 22:00', '🅿️ Parcare inclusă']
 
 /* ---- Date calendaristice ---- */
 export const pad = n => String(n).padStart(2, '0')

@@ -5,7 +5,7 @@ import { useStore, S, closeM, openM, openTerms, toast, goToFirstInvalid, publish
 import { blobToDataURL } from '../lib/api'
 import { TILES, geocode } from '../lib/geo'
 import { COUNTIES, COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtSize, fmtLei, feeOf, validPhone, shrinkImage } from '../lib/utils'
-import { Field, Modal, CloseBtn, useErrs } from './ui'
+import { Field, Modal, CloseBtn, useErrs, ToggleDropdown } from './ui'
 import Calendar from './Calendar'
 
 const MAX_PHOTOS = 10, MAX_MB = 10
@@ -216,7 +216,7 @@ export default function PublishModal() {
 
         <div className="section-title">📋 Reguli ale casei <span className="hint">· opțional, apar în pagina anunțului</span></div>
         <div className="field full">
-          <div className="rule-presets">{RULE_PRESETS.map(t => <button key={t} type="button" className={`chip${rules.includes(t) ? ' active' : ''}`} onClick={() => togglePreset(t)}>{t}</button>)}</div>
+          <ToggleDropdown label="Opțiuni ale casei" options={RULE_PRESETS} isOn={t => rules.includes(t)} onToggle={togglePreset} />
           <div className="rule-add"><input ref={ruleRef} maxLength={150} value={ruleIn} onChange={e => setRuleIn(e.target.value)} placeholder="Scrie o regulă proprie, ex. Pantofii se lasă la intrare" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addRule() } }} /><button type="button" className="btn" onClick={addRule}>Adaugă</button></div>
           <ul className="rule-list">{rules.map((t, i) => <li key={t}><span>{t}</span><button type="button" aria-label="Șterge regula" onClick={() => setRules(r => r.filter((_, k) => k !== i))}>×</button></li>)}</ul>
         </div>
