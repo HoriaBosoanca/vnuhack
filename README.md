@@ -1,2 +1,1 @@
-Frontend & backend: render.com \
-Database: neon.com
+https://vnuhack-frontend.onrender.com
