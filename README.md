@@ -18,4 +18,4 @@ npm run dev
 ## Variabile de mediu
 - `DATABASE_URL` (backend): baza de date Postgres; implicit cea de pe Neon.
 - `CORS_ORIGINS` (backend, opțional): site-urile care pot apela API-ul, ex. `https://vnuhack-frontend.onrender.com`; implicit oricare.
-- `VITE_API_URL` (frontend): adresa backend-ului, ex. `https://spatiu-api.onrender.com`; implicit `http://localhost:8000`.
+- `VITE_API_URL` (frontend, opțional): adresa backend-ului; implicit `https://vnuhack-backend-py.onrender.com`. Pentru backend-ul local: `http://localhost:8000`.

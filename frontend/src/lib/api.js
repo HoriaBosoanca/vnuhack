@@ -1,6 +1,6 @@
 /* ================== LEGĂTURA CU BACKEND-UL (backend-py) ==================
-   Adresa API-ului se setează în VITE_API_URL (vezi .env.example); implicit serverul local. */
-export const API = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
+   Adresa API-ului se setează în VITE_API_URL (vezi .env.example); implicit backend-ul de pe Render. */
+export const API = (import.meta.env.VITE_API_URL || 'https://vnuhack-backend-py.onrender.com').replace(/\/$/, '')
 
 const TOKEN_KEY = 'spatiu-token'
 let token = null
