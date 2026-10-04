@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   useStore, S, loadAll, filteredListings, setFilter, resetFilters, activeFilterCount, toggleFav, openDetail,
-  openPublish, openMessages, openAccount, openTerms, listingRating, mapApi, anyOpen, closeTop,
+  openPublish, openMessages, openAccount, openTerms, openSupport, listingRating, mapApi, anyOpen, closeTop,
   unreadCount, emit,
 } from './lib/store'
 import { COUNTY_NAMES, HOURS, HOURS_END, RULE_PRESETS, fmtPrice, label, ruleKey } from './lib/utils'
@@ -26,6 +26,7 @@ function Header() {
       <nav>
         <a onClick={() => { resetFilters(); document.querySelector('.layout').scrollIntoView({ behavior: 'smooth' }) }}>Explorează</a>
         <a onClick={() => openTerms()}>Termeni și condiții</a>
+        <a className="help-link" onClick={openSupport} title="Scrie-ne în Mesaje" aria-label="Ai nevoie de ajutor?"><span className="full">Ai nevoie de ajutor?</span><span className="short">Ajutor</span></a>
       </nav>
       <div className="header-actions">
         <button className="btn" onClick={openPublish} aria-label="Publică un spațiu">＋<span className="lbl">Publică un spațiu</span></button>
@@ -121,6 +122,11 @@ function Explore() {
         <div className="toolbar">
           {CHIPS.map(([t, l]) => <button key={t} className={`chip${s.ui.filters.type === t ? ' active' : ''}`} onClick={() => setFilter({ type: t })}>{l}</button>)}
           <button className={`chip${nf ? ' active' : ''}`} id="fltBtn" onClick={() => { S.ui.fltOpen = !S.ui.fltOpen; emit() }} aria-expanded={s.ui.fltOpen} aria-controls="filters">⚙ Filtre{nf ? ` (${nf})` : ''}</button>
+          <label className="sort-label" htmlFor="sortBy">Sortează</label>
+          <select id="sortBy" className="sort-select" value={s.ui.filters.sort} onChange={e => setFilter({ sort: e.target.value })} aria-label="Sortează proprietățile">
+            <option value="default">Relevanță</option><option value="priceAsc">Preț: mic → mare</option><option value="priceDesc">Preț: mare → mic</option>
+            <option value="ratingDesc">Rating: mare → mic</option><option value="ratingAsc">Rating: mic → mare</option>
+          </select>
           <span className="count">{data.length}{data.length === 1 ? ' spațiu disponibil' : ' spații disponibile'}</span>
         </div>
         {s.ui.fltOpen && <Filters />}
@@ -140,6 +146,7 @@ function Footer() {
       <a href="#" onClick={link(() => openTerms())}>Termeni și condiții</a>
       <a href="#" onClick={link(() => openMessages())}>Mesaje</a>
       <a href="#" onClick={link(openPublish)}>Publică un spațiu</a>
+      <a href="#" onClick={link(openSupport)}>Ai nevoie de ajutor?</a>
       <span className="copy">© 2026 SPAȚIU</span>
     </footer>
   )

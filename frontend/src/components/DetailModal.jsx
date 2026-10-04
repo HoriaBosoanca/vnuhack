@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   useStore, S, byId, isMine, nextFree, listingRating, hostRating, ownerKey, canCancel, closeM, startBooking,
+  findReview, bookingStarted, openReview,
   deleteListing, showOnMap,
 } from '../lib/store'
 import { SAFETY, fmtPrice, fmtDay, fmtDate, fmtRt, fullAddress, label, maskPhone, telHref, avgOf } from '../lib/utils'
@@ -12,9 +13,16 @@ function Reviews({ x }) {
   const s = useStore()
   const rs = s.reviews.filter(r => r.type === 'listing' && r.listingId === x.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   const lr = listingRating(x)
+  /* Dacă am o rezervare începută la acest spațiu și n-am lăsat încă recenzie, pot scrie una de aici. */
+  const eligible = s.user && s.bookingsMine.find(b => b.listingId === x.id && b.status === 'confirmată' && !findReview(b, 'listing') && bookingStarted(b))
   return (
     <div className="safety">
-      <div className="safety-head"><h3>⭐ Recenzii</h3>{lr.n > 0 && <span className="tag">{lr.n} {lr.n === 1 ? 'recenzie' : 'recenzii'}</span>}</div>
+      <div className="safety-head"><h3>⭐ Recenzii</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {lr.n > 0 && <span className="tag">{lr.n} {lr.n === 1 ? 'recenzie' : 'recenzii'}</span>}
+          {eligible && <button className="btn sm primary" onClick={() => openReview(eligible.id, 'listing')}>⭐ Scrie o recenzie</button>}
+        </div>
+      </div>
       {rs.length ? <>
         <div className="rv-sum"><div className="rv-big">{fmtRt(lr.avg)}</div><div><Stars n={Math.round(lr.avg)} /><div className="hint">Spațiu: {fmtRt(lr.avg)} · Gazdă: {fmtRt(avgOf(rs.map(r => r.hostStars)))}</div></div></div>
         {rs.map(r => (

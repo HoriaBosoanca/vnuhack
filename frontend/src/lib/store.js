@@ -1,14 +1,14 @@
 import { useSyncExternalStore } from 'react'
 import { api, absUrl, hasToken, setToken } from './api'
 import { ticketHTML } from './ticket'
-import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, noiseLevel, accessWindow, toMin, downloadBlob } from './utils'
+import { avgOf, todayKey, fmtLei, fmtRanges, label, ruleKey, noiseLevel, accessWindow, toMin, downloadBlob, normalizeText } from './utils'
 
 /* ================== STARE GLOBALĂ ==================
    Un singur „store” mutabil; componentele se abonează cu useStore() și se re-randează la emit().
    Datele (anunțuri, conturi, rezervări, recenzii, mesaje) vin de la backend-ul Python. */
 export const MODALS = ['detail', 'publish', 'msg', 'account', 'auth', 'book', 'ticket', 'review', 'risk', 'terms'] // ordinea = ordinea de suprapunere
 
-export const defaultFilters = () => ({ q: '', type: 'all', duration: 'all', county: '', min: '', max: '', noise: '0', access: 'any', from: '18:00', to: '23:00', rules: [] })
+export const defaultFilters = () => ({ q: '', type: 'all', duration: 'all', county: '', min: '', max: '', noise: '0', access: 'any', from: '18:00', to: '23:00', rules: [], sort: 'default' })
 
 /* Preferințe locale (doar în acest browser): favorite și harta ascunsă. */
 const local = {
@@ -57,8 +57,16 @@ export const lastTime = c => new Date(c.messages.length ? c.messages[c.messages.
 export const unreadCount = () => S.conversations.reduce((s, c) => s + c.unread, 0)
 
 /* Datele de la server → forma folosită de componente. */
+/* Poză implicită, după tip, pentru anunțurile fără poze. */
+const DEFAULT_IMAGES = {
+  event: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=85',
+  storage: 'https://images.unsplash.com/photo-1586528116493-da8b7c3d6b2d?auto=format&fit=crop&w=1000&q=85',
+  work: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=85',
+  leisure: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=85',
+}
 function normListing(x) {
-  x.imgs = x.imgs.map(absUrl); x.img = x.imgs[0] || ''; x.avail = new Set(x.avail)
+  x.imgs = x.imgs.map(absUrl); if (!x.imgs.length) x.imgs = [DEFAULT_IMAGES[x.type] || DEFAULT_IMAGES.event]
+  x.img = x.imgs[0]; x.avail = new Set(x.avail)
   if (x.contract) x.contract.url = absUrl(x.contract.url)
   return x
 }
@@ -99,7 +107,9 @@ export async function loadAll() {
     catch (e) { if (e.status === 401) setToken(null); else toast(e.message) }
   }
   S.loaded = true; emit()
-  setInterval(pollConversations, 8000)
+  /* Mesajele noi: la fiecare 3 s cât timp e deschisă fereastra de mesaje, altfel la fiecare 9 s. */
+  let tick = 0
+  setInterval(() => { tick++; if (S.ui.open.msg || tick % 3 === 0) pollConversations() }, 3000)
 }
 
 async function loadUserData() {
@@ -110,15 +120,16 @@ async function loadUserData() {
 async function refreshBookings() { const b = await api('/api/rezervari'); S.bookingsMine = b.mine.map(normBooking); S.bookingsRecv = b.received.map(normBooking); emit() }
 async function refreshListings() { S.listings = (await api('/api/anunturi')).map(normListing); emit() }
 
-/* Mesajele noi se verifică periodic (fără WebSocket, ca să rămână simplu). */
+/* Mesajele noi se verifică periodic (fără WebSocket, ca să rămână simplu); vezi loadAll. */
+let polling = false, sending = 0
 async function pollConversations() {
-  if (!S.user || document.visibilityState === 'hidden') return
+  if (!S.user || polling || sending || document.visibilityState === 'hidden') return
   let fresh
-  try { fresh = await api('/api/conversatii') } catch (e) { return }
-  if (!S.user) return
+  polling = true
+  try { fresh = await api('/api/conversatii') } catch (e) { return } finally { polling = false }
+  if (!S.user || sending) return
   for (const c of fresh) {
     const old = conv(c.id), viewing = S.ui.open.msg && S.ui.activeConv === c.id && (innerWidth > 720 || S.ui.inThread)
-    if (old?.typing) { c.messages = old.messages; c.typing = true }
     if (c.unread && viewing) { c.unread = 0; api(`/api/conversatii/${c.id}/citit`, { method: 'POST' }).catch(() => {}) }
     else if (c.unread > (old?.unread || 0)) toast(`💬 Mesaj nou de la ${c.with}`)
   }
@@ -172,11 +183,18 @@ function passFilters(x, f) {
   return true
 }
 export function filteredListings() {
-  const f = S.ui.filters, q = f.q.trim().toLowerCase()
-  return S.listings.filter(x => (f.type === 'all' || x.type === f.type)
-    && (!q || [x.title, x.location, x.address, x.desc, x.type, label(x.type)].join(' ').toLowerCase().includes(q))
+  const f = S.ui.filters, q = normalizeText(f.q)
+  const data = S.listings.filter(x => (f.type === 'all' || x.type === f.type)
+    && (!q || normalizeText([x.title, x.location, x.address, x.desc, x.type, label(x.type)].join(' ')).includes(q))
     && (f.duration === 'all' || (f.duration === 'month' && x.unit === 'lună') || (f.duration === 'day' && x.unit === 'zi') || (f.duration === 'hour' && x.unit === 'oră'))
     && passFilters(x, f))
+  /* Sortare: anunțurile fără recenzii contează ca rating 0; la egalitate, după numărul de recenzii, apoi după preț. */
+  const rt = x => { const r = listingRating(x); return r.n ? r.avg : 0 }, nr = x => listingRating(x).n
+  if (f.sort === 'priceAsc') data.sort((a, b) => a.price - b.price)
+  else if (f.sort === 'priceDesc') data.sort((a, b) => b.price - a.price)
+  else if (f.sort === 'ratingDesc') data.sort((a, b) => rt(b) - rt(a) || nr(b) - nr(a) || a.price - b.price)
+  else if (f.sort === 'ratingAsc') data.sort((a, b) => rt(a) - rt(b) || nr(a) - nr(b) || a.price - b.price)
+  return data
 }
 export function activeFilterCount() { const f = S.ui.filters; return [f.county, f.min || f.max, f.noise !== '0', f.access !== 'any'].filter(Boolean).length + f.rules.length }
 
@@ -235,6 +253,14 @@ export function selectConv(id) {
 export function backToList() { S.ui.inThread = false; emit() }
 export function setDraft(t) { S.ui.msgDraft = t; emit() }
 function upsertConv(c) { const i = S.conversations.findIndex(z => z.id === c.id); i >= 0 ? S.conversations.splice(i, 1, c) : S.conversations.unshift(c) }
+/* „Ai nevoie de ajutor?” → conversația cu Echipa SPAȚIU. */
+export function openSupport() {
+  requireAuth(async () => {
+    let c
+    try { c = await api('/api/conversatii/suport', { method: 'POST' }) } catch (e) { return fail(e) }
+    upsertConv(c); S.ui.open.msg = true; selectConv(c.id)
+  }, 'Ca să scrii echipei SPAȚIU ai nevoie de un cont.')
+}
 export function startChat(listingId) {
   const x = byId(listingId)
   if (!x) return toast('Anunțul a fost retras.')
@@ -252,20 +278,11 @@ export async function sendMsg() {
   const text = S.ui.msgDraft.trim(), c = conv(S.ui.activeConv); if (!text || !c) return
   c.messages.push({ from: 'me', text, t: new Date().toISOString() }); S.ui.msgDraft = ''; emit()
   let fresh
+  sending++ // cât timp se trimite, verificarea periodică nu suprascrie conversația
   try { fresh = await api(`/api/conversatii/${c.id}/mesaje`, { method: 'POST', body: { text } }) }
   catch (e) { c.messages.pop(); S.ui.msgDraft = text; emit(); return fail(e) }
-  /* Răspunsurile automate ale suportului apar după un „scrie…” scurt. */
-  const lastMine = fresh.messages.map(m => m.from).lastIndexOf('me')
-  const replies = fresh.messages.slice(lastMine + 1)
-  if (!replies.length) { upsertConv(fresh); return emit() }
-  upsertConv({ ...fresh, messages: fresh.messages.slice(0, lastMine + 1), typing: true }); emit()
-  setTimeout(() => {
-    const cur = conv(fresh.id); if (!cur) return
-    cur.messages = cur.messages.concat(replies.filter(r => !cur.messages.some(m => m.t === r.t && m.text === r.text && m.from === r.from))); cur.typing = false
-    const viewing = S.ui.open.msg && S.ui.activeConv === cur.id && (innerWidth > 720 || S.ui.inThread)
-    if (!viewing) toast(`💬 Mesaj nou de la ${cur.with}`)
-    emit()
-  }, 1500 + Math.random() * 1000)
+  finally { sending-- }
+  upsertConv(fresh); emit()
 }
 
 /* ================== REZERVARE + PLATĂ ================== */

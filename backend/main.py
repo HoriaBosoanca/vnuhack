@@ -11,7 +11,8 @@ Endpoint-uri (toate sub /api; cele marcate cu * cer „Authorization: Bearer <to
     GET  /api/poze/{id}   GET /api/anunturi/{id}/contract
     GET  /api/rezervari * POST /api/rezervari *   POST /api/rezervari/{id}/anuleaza *
     GET  /api/recenzii    POST /api/recenzii *
-    GET  /api/conversatii *   POST /api/conversatii *   POST /api/conversatii/{id}/mesaje *   POST /api/conversatii/{id}/citit *
+    GET  /api/conversatii *   POST /api/conversatii *   POST /api/conversatii/suport *
+    POST /api/conversatii/{id}/mesaje *   POST /api/conversatii/{id}/citit *
 """
 
 import logging

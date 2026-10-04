@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore, S, byId, closeM, openTerms, goToFirstInvalid, toast, createBooking } from '../lib/store'
 import {
   HOURS, HOURS_END, pad, toMin, todayKey, hoursBetween, fmtHours, fmtLei, fmtPrice, fmtRanges, fullAddress, accessWindow,
-  luhn, cardBrand, expOk, fmtCard, fmtExp, validEmail,
+  luhn, cardBrand, expOk, fmtCard, fmtExp, validEmail, feeOf,
 } from '../lib/utils'
 import { Field, Modal, CloseBtn, useErrs } from './ui'
 import Calendar from './Calendar'
@@ -12,7 +12,9 @@ function calc(x, daysSet, from, to) {
   if (x.unit === 'zi') { qty = days.length; line = `${qty} ${qty === 1 ? 'zi' : 'zile'} × ${fmtLei(x.price)}` }
   else if (x.unit === 'lună') { qty = days.length ? Math.ceil(days.length / 30) : 0; line = `${qty} ${qty === 1 ? 'lună' : 'luni'} × ${fmtLei(x.price)} (${days.length} zile; se plătește fiecare lună începută)` }
   else { hours = hoursBetween(from, to); qty = hours * days.length; line = `${days.length} ${days.length === 1 ? 'zi' : 'zile'} × ${fmtHours(hours)} h × ${fmtLei(x.price)}` }
-  return { x, days, qty, hours, line, total: Math.round(qty * x.price * 100) / 100, from: x.unit === 'oră' ? from : null, to: x.unit === 'oră' ? to : null }
+  /* Total de plată = prețul spațiului + taxa SPAȚIU de 5% (TVA inclus). Serverul face același calcul. */
+  const subtotal = Math.round(qty * x.price * 100) / 100, fee = feeOf(subtotal), total = Math.round((subtotal + fee) * 100) / 100
+  return { x, days, qty, hours, line, subtotal, fee, total, from: x.unit === 'oră' ? from : null, to: x.unit === 'oră' ? to : null }
 }
 
 function Summary({ c }) {
@@ -20,8 +22,10 @@ function Summary({ c }) {
     <div className="row"><span>Perioada</span><b style={{ textAlign: 'right' }}>{c.days.length ? fmtRanges(c.days) : 'Alege zilele în calendar'}</b></div>
     {c.from && <div className="row"><span>Interval orar</span><b>{c.from} – {c.to}</b></div>}
     <div className="row"><span>Calcul</span><span style={{ textAlign: 'right' }}>{c.days.length ? c.line : '–'}</span></div>
-    <div className="row total"><span>Total</span><span>{fmtLei(c.total)}</span></div>
-    <div className="hint" style={{ marginTop: 4 }}>Anulare gratuită din „Contul meu” până în prima zi a rezervării, cu rambursare integrală.</div>
+    <div className="row"><span>Preț spațiu</span><span>{c.days.length ? fmtLei(c.subtotal) : '–'}</span></div>
+    <div className="row"><span>Taxă SPAȚIU (5%, TVA inclus)</span><span>{c.days.length ? fmtLei(c.fee) : '–'}</span></div>
+    <div className="row total"><span>Total de plată</span><span>{fmtLei(c.total)}</span></div>
+    <div className="hint" style={{ marginTop: 4 }}>Taxa SPAȚIU de 5% este inclusă în total și are TVA inclus. Anulare gratuită din „Contul meu” până în prima zi a rezervării, cu rambursare integrală.</div>
   </>
 }
 
