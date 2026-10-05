@@ -501,7 +501,7 @@ header .logo{font-size:28px}
  border:4px solid #fbf5e9;box-shadow:0 26px 54px #1f2b2059,0 2px 8px #1f2b2026;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .4s;animation:mpCard 1s cubic-bezier(.2,.7,.2,1) backwards}
 /* Cardurile sunt estompate implicit și devin opace la hover (sau când primesc focus de la tastatură). */
 .mp-card{opacity:.55;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .4s,opacity .4s}
-.mp-card:hover,.mp-card:focus-visible{opacity:1;transform:translateY(-8px) rotate(0deg) scale(1.03)!important;box-shadow:0 36px 64px #1f2b2066;z-index:3}
+.mp-card:hover,.mp-card:focus-visible,.mp-card.lit{opacity:1;transform:translateY(-8px) rotate(0deg) scale(1.03)!important;box-shadow:0 36px 64px #1f2b2066;z-index:3}
 .mp-card.c1{left:0;top:10%;width:60%;height:72%;transform:rotate(-3deg);animation-delay:.25s}
 .mp-card.c2{right:0;top:0;width:45%;height:50%;transform:rotate(3deg);animation-delay:.4s}
 .mp-card.c3{right:6%;bottom:0;width:48%;height:42%;transform:rotate(-1.5deg);animation-delay:.55s}
@@ -511,7 +511,7 @@ header .logo{font-size:28px}
 .mp-tag{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;text-align:left;background:#fbf5e9e6;backdrop-filter:blur(6px);border-radius:14px;padding:9px 12px;font:inherit;font-size:13px;color:var(--muted);
  transform:translateY(6px);opacity:.94;transition:transform .35s,opacity .35s}
 .mp-tag b{font-size:14px;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mp-card:hover .mp-tag{transform:none;opacity:1}
+.mp-card:hover .mp-tag,.mp-card.lit .mp-tag{transform:none;opacity:1}
 /* Pe ecrane mici colajul e sub text, așa că acolo conținutul nu se mai estompează la scroll. */
 @media(max-width:900px){.mp-in{grid-template-columns:1fr;transform:none;opacity:1}.mp-art{height:clamp(280px,78vw,420px)}}
 @media(prefers-reduced-motion:reduce){.mp-in{transform:none;opacity:1}.mp-text>*,.mp-card{animation:none}}

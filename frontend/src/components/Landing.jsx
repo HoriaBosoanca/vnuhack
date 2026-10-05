@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fmtPrice } from '../lib/utils'
 import {
   useStore, S, emit, openDetail, byRandom, setFilter, resetFilters, setMapHidden, openPublish, openMessages,
@@ -50,6 +50,13 @@ export function MapPromo() {
     addEventListener('scroll', onScroll, { passive: true }); upd()
     return () => removeEventListener('scroll', onScroll)
   }, [])
+  /* Până la primul hover, la câteva secunde câte un card se „aprinde” ca la hover, pe rând. */
+  const [lit, setLit] = useState(-1), [demo, setDemo] = useState(true), n = recent.length
+  useEffect(() => {
+    if (!demo || !n || !s.ui.animOn) { setLit(-1); return }
+    const t = setInterval(() => setLit(k => (k + 1) % n), 3000)
+    return () => clearInterval(t)
+  }, [demo, n, s.ui.animOn])
   const openMap = () => { if (S.ui.mapHidden) setMapHidden(false); toLayout() }
   return (
     <section className="lb-map mp-top" id="lbMap" ref={ref}>
@@ -66,7 +73,7 @@ export function MapPromo() {
         {/* Colaj cu pozele celor mai recente 3 anunțuri; fără anunțuri nu apare nimic. */}
         {recent.length > 0 && <div className={`mp-art n${recent.length}`}>
           {recent.map((x, k) => (
-            <button type="button" key={x.id} className={`mp-card c${k + 1}`} style={{ backgroundImage: `url('${x.img}')` }} onClick={() => openDetail(x.id)} aria-label={x.title}>
+            <button type="button" key={x.id} className={`mp-card c${k + 1}${k === lit ? ' lit' : ''}`} onMouseEnter={() => setDemo(false)} style={{ backgroundImage: `url('${x.img}')` }} onClick={() => openDetail(x.id)} aria-label={x.title}>
               <span className="mp-tag"><b>{x.title}</b>{fmtPrice(x.price)} lei / {x.unit}</span>
             </button>
           ))}
