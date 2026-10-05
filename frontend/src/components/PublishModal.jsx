@@ -213,6 +213,7 @@ export default function PublishModal() {
         </Field>
         <div className="field full"><label htmlFor="fDesc">Descriere</label><textarea id="fDesc" rows="3" value={f.desc} onChange={set('desc')} placeholder="Ce poate face chiriașul aici? Ce restricții există?" /></div>
         <div className="field full"><div className="hint" style={{ padding: '10px 12px', borderRadius: 10, background: '#f3f6f4', border: '1px solid #dce5df' }}>💳 <b>Taxă SPAȚIU: 5%</b> din prețul final al fiecărei rezervări, cu TVA inclus. Taxa va fi afișată și calculată înainte de confirmarea rezervării.</div></div>
+        <div className="field full"><div className="hint" style={{ padding: '10px 12px', borderRadius: 10, background: '#f3f6f4', border: '1px solid #dce5df' }}>🧹 <b>Ai nevoie de curățenie?</b> Dacă vrei pe cineva care să facă curat în spațiu, înainte sau după închiriere, poți suna la <a href="tel:+40737576541" style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>+40 737 576 541</a>.</div></div>
 
         <div className="section-title">📅 Când e liber spațiul * <span className="hint">· apasă pe zile sau trage peste ele ca să le marchezi</span></div>
         <Field full err={errs.pubCal}><Calendar key={calKey} mode="edit" days={days} onChange={d => { setDays(d); if (d.size) clear('pubCal') }} /></Field>
