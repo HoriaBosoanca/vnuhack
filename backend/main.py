@@ -58,6 +58,7 @@ async def lifespan(app: FastAPI):
     await pool.open()
     async with pool.connection() as conn:
         await init_db(conn)
+        await mesaje.link_support(conn)
     app.state.pool = pool
     yield
     await pool.close()
