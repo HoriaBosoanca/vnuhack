@@ -561,3 +561,4 @@ header.scrolled{background:#fbf5e9c7}
 :root{--btn-r:12px}
 .btn,.btn.sm,.btn.big,#accBtn,.ic-btn,.iv-cta,.chip,.tab,.tabs,.sort-select,.tgl-dd-btn,.cal-nav,.close,.add-photo,.mc-actions .btn{border-radius:var(--btn-r)}
 .ic-btn{display:inline-flex;align-items:center;gap:8px}
+.fgrid input:disabled{opacity:.55;cursor:not-allowed}

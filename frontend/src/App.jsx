@@ -72,8 +72,10 @@ function Filters() {
           </select></div>
         <div className="field"><label htmlFor="fltCounty">Județ</label>
           <select id="fltCounty" value={f.county} onChange={e => setFilter({ county: e.target.value })}><option value="">Toate județele</option>{COUNTY_NAMES.map(c => <option key={c}>{c}</option>)}</select></div>
-        <div className="field"><label htmlFor="fltMin">Preț (lei / unitate)</label>
-          <div className="time-row"><input id="fltMin" type="number" min="0" placeholder="min" value={f.min} onChange={e => setFilter({ min: e.target.value })} /><span>–</span><input id="fltMax" type="number" min="0" placeholder="max" value={f.max} onChange={e => setFilter({ max: e.target.value })} aria-label="Preț maxim" /></div></div>
+        <div className="field"><label htmlFor="fltUnit">Tip de plată</label>
+          <select id="fltUnit" value={f.unit} onChange={e => setFilter({ unit: e.target.value, min: '', max: '' })}><option value="">Oricare</option><option value="oră">Pe oră</option><option value="zi">Pe zi</option><option value="lună">Pe lună</option></select></div>
+        <div className="field"><label htmlFor="fltMin">Preț {f.unit ? `(lei / ${f.unit})` : <span className="hint">· alege întâi tipul de plată</span>}</label>
+          <div className="time-row"><input id="fltMin" type="number" min="0" placeholder="min" disabled={!f.unit} value={f.min} onChange={e => setFilter({ min: e.target.value })} /><span>–</span><input id="fltMax" type="number" min="0" placeholder="max" disabled={!f.unit} value={f.max} onChange={e => setFilter({ max: e.target.value })} aria-label="Preț maxim" /></div></div>
         <div className="field"><label htmlFor="fltAccess">Interval de acces</label>
           <select id="fltAccess" value={f.access} onChange={e => setFilter({ access: e.target.value })}><option value="any">Oricare</option><option value="24/7">Doar non-stop (24/7)</option><option value="range">Să fie deschis între…</option></select>
           {f.access === 'range' && <div className="time-row" style={{ marginTop: 6 }}>

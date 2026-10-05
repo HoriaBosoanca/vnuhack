@@ -12,7 +12,7 @@ export const MODALS = ['help', 'detail', 'publish', 'profile', 'msg', 'account',
 const RANK = new Map()
 export const randRank = x => { if (!RANK.has(x.id)) RANK.set(x.id, Math.random()); return RANK.get(x.id) }
 export const byRandom = (a, b) => randRank(a) - randRank(b)
-export const defaultFilters = () => ({ q: '', type: 'all', county: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'random' })
+export const defaultFilters = () => ({ q: '', type: 'all', county: '', unit: '', min: '', max: '', access: 'any', from: '18:00', to: '23:00', days: new Set(), rules: [], sort: 'random' })
 
 /* Preferințe locale (doar în acest browser): favorite și harta ascunsă. */
 const local = {
@@ -180,8 +180,10 @@ export function resetFilters() { S.ui.filters = defaultFilters(); emit() }
 
 function passFilters(x, f) {
   if (f.county && x.county !== f.county) return false
-  if (f.min !== '' && x.price < +f.min) return false
-  if (f.max !== '' && x.price > +f.max) return false
+  /* Prețul se filtrează doar în cadrul unui tip de plată (lei/oră, lei/zi sau lei/lună), altfel nu se pot compara. */
+  if (f.unit && x.unit !== f.unit) return false
+  if (f.unit && f.min !== '' && x.price < +f.min) return false
+  if (f.unit && f.max !== '' && x.price > +f.max) return false
   if (f.access === '24/7' && x.access !== '24/7') return false
   if (f.access === 'range' && x.access !== '24/7') { const w = accessWindow(x); if (!w) return false; let a = toMin(f.from), b = toMin(f.to); if (b <= a) b += 1440; if (a < w[0]) { a += 1440; b += 1440 } if (a < w[0] || b > w[1]) return false }
   /* Disponibilitate: spațiul trebuie să fie liber în toate zilele alese (cele din trecut se ignoră). */
@@ -204,7 +206,7 @@ export function filteredListings() {
   else if (f.sort === 'ratingAsc') data.sort((a, b) => rt(a) - rt(b) || nr(a) - nr(b) || a.price - b.price)
   return data
 }
-export function activeFilterCount() { const f = S.ui.filters; return [f.type !== 'all', f.county, f.min || f.max, f.access !== 'any'].filter(Boolean).length + f.rules.length + (f.days.size ? 1 : 0) }
+export function activeFilterCount() { const f = S.ui.filters; return [f.type !== 'all', f.county, f.unit, f.unit && (f.min || f.max), f.access !== 'any'].filter(Boolean).length + f.rules.length + (f.days.size ? 1 : 0) }
 
 /* ================== ANUNȚURI ================== */
 export function openDetail(id) {
